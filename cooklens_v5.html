@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CookLens — Your AI Culinary Partner</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#C4522A;--primary-light:#F9EDE5;--primary-mid:#E8895A;--primary-dark:#8C3318;
+  --green:#2D5016;--green-light:#EAF0E1;
+  --amber:#D4940A;--amber-light:#FDF6E3;--amber-border:#F0D870;
+  --purple:#6B3FA0;--purple-light:#F0EAF9;
+  --blue:#1E5FA8;--blue-light:#E8F0FB;
+  --bg:#FDFAF6;--surface:#FFFFFF;--surface2:#F7F3EE;--surface3:#F0EBE3;
+  --text:#1A1208;--muted:#7A6A5A;--light:#B0A090;
+  --border:#E8E0D5;--border-strong:#CFC4B5;
+  --radius:12px;--radius-lg:20px;
+  --shadow:0 2px 16px rgba(26,18,8,.06);--shadow-lg:0 8px 40px rgba(26,18,8,.12);
+  --shadow-xl:0 16px 60px rgba(26,18,8,.18);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif}
+button{cursor:pointer;font-family:inherit}
+input,textarea{font-family:inherit}
+img{max-width:100%}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{0%{transform:scale(.82);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes toastIn{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(200px) rotate(720deg);opacity:0}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(196,82,42,.3)}50%{box-shadow:0 0 0 10px rgba(196,82,42,0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.fade-up{animation:fadeUp .42s ease both}
+.fade-in{animation:fadeIn .3s ease both}
+.pop{animation:pop .35s cubic-bezier(.34,1.56,.64,1) both}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:12px 26px;border-radius:30px;
+  font-size:15px;font-weight:500;border:none;cursor:pointer;transition:all .18s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#a8421e;transform:translateY(-1px);box-shadow:0 4px 14px rgba(196,82,42,.3)}
+.btn-primary:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}
+.btn-ghost{background:var(--surface);color:var(--text);border:1.5px solid var(--border-strong)}
+.btn-ghost:hover{background:var(--surface2);border-color:var(--primary)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#1e3a0e;transform:translateY(-1px)}
+.btn-dark{background:#1A1208;color:#fff}
+.btn-dark:hover{background:#2e1f0d;transform:translateY(-1px)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.card-hover{transition:transform .2s,box-shadow .2s;cursor:pointer}
+.card-hover:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+
+/* NAV */
+#nav{position:sticky;top:0;z-index:200;background:rgba(253,250,246,.96);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1040px;margin:0 auto;padding:0 24px;height:62px;
+  display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:9px;background:none;border:none;
+  cursor:pointer;font-family:Georgia,serif;font-size:20px;font-weight:700;color:var(--primary)}
+.nav-logo-dot{width:30px;height:30px;background:var(--primary);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:14px}
+.nav-links{display:flex;gap:3px}
+.nav-btn{padding:7px 13px;border-radius:22px;font-size:13px;font-weight:500;
+  border:none;background:none;color:var(--muted);cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;gap:5px}
+.nav-btn.active{background:var(--primary-light);color:var(--primary)}
+.nav-btn:hover:not(.active){background:var(--surface2)}
+
+/* XP BAR */
+#xp-bar{background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:5px 24px;display:flex;align-items:center;gap:12px}
+.xp-label{font-size:12px;font-weight:700;color:var(--primary);white-space:nowrap}
+.xp-outer{flex:1;background:var(--border);border-radius:6px;height:9px;overflow:hidden}
+.xp-inner{height:100%;border-radius:6px;
+  background:linear-gradient(90deg,var(--primary),var(--amber),var(--primary));
+  background-size:200% 100%;
+  transition:width 1.2s cubic-bezier(.4,2,.6,1);width:0%}
+.xp-num{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* API BANNER */
+#api-banner{background:#1a1208;color:#fff;padding:11px 24px;display:flex;
+  align-items:center;gap:14px;flex-wrap:wrap;font-size:13px}
+#api-banner.hidden{display:none}
+.banner-text{flex:1;min-width:180px;color:rgba(255,255,255,.85);line-height:1.55}
+.banner-text a{color:#e8895a;text-decoration:none}
+.banner-input{padding:7px 13px;border:1px solid rgba(255,255,255,.2);border-radius:8px;
+  font-size:13px;background:rgba(255,255,255,.1);color:#fff;width:220px;outline:none}
+.banner-input::placeholder{color:rgba(255,255,255,.4)}
+.banner-save{background:var(--primary);color:#fff;border:none;padding:7px 16px;
+  border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
+.banner-close-btn{background:none;border:none;color:rgba(255,255,255,.4);
+  font-size:20px;cursor:pointer;line-height:1;padding:0 4px}
+.banner-note{width:100%;font-size:11px;color:rgba(255,255,255,.35);padding-left:26px}
+
+#page{max-width:1040px;margin:0 auto;padding:0 24px}
+.page-section{padding:40px 0}
+
+/* TOAST */
+#toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:#1a1208;color:#fff;padding:10px 20px;border-radius:28px;font-size:14px;
+  font-weight:500;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1) both;
+  box-shadow:0 6px 22px rgba(0,0,0,.22);transition:opacity .3s,transform .3s}
+.toast.success{background:var(--green)}
+.toast.error{background:#a32d2d}
+.toast.info{background:var(--blue)}
+
+/* SPINNER */
+.spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:52px 0}
+.spinner{width:36px;height:36px;border:3px solid var(--primary-light);
+  border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+.spinner-msg{color:var(--muted);font-size:14px;text-align:center;max-width:280px;line-height:1.6}
+
+/* ═══ HOME PAGE ═══ */
+.home-hero{text-align:center;padding:64px 0 44px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--primary-light);
+  color:var(--primary);font-size:11px;font-weight:700;letter-spacing:.1em;
+  padding:5px 16px;border-radius:20px;margin-bottom:22px;text-transform:uppercase}
+.hero-title{font-size:clamp(36px,5.5vw,62px);font-weight:700;line-height:1.11;margin-bottom:18px}
+.hero-title em{color:var(--primary);font-style:italic}
+.hero-sub{font-size:17px;color:var(--muted);max-width:480px;margin:0 auto 36px;line-height:1.75}
+
+/* MODE CARDS */
+.modes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:56px}
+.mode-card{border-radius:var(--radius-lg);padding:26px 24px;cursor:pointer;
+  transition:transform .22s,box-shadow .22s;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:10px;border:1.5px solid transparent}
+.mode-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-xl)}
+.mode-card-classic{background:linear-gradient(135deg,#FFF8F3,#FDF0E5);border-color:#E8C4A0}
+.mode-card-vibe{background:linear-gradient(135deg,#F0EAF9,#E8F0FB);border-color:#C4A8E0}
+.mode-card-mystery{background:linear-gradient(135deg,#E8F5E9,#FFF8F3);border-color:#A8D4A0}
+.mode-card-remix{background:linear-gradient(135deg,#FEF3C7,#FFF8F3);border-color:#E8C84C}
+.mode-card-icon{font-size:36px;margin-bottom:4px;display:block}
+.mode-card-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 9px;border-radius:10px;margin-bottom:2px}
+.mode-card-title{font-family:Georgia,serif;font-size:21px;font-weight:700}
+.mode-card-desc{font-size:13.5px;color:var(--muted);line-height:1.65}
+.mode-card-cta{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+  margin-top:6px}
+.mode-new-badge{position:absolute;top:14px;right:14px;background:var(--primary);
+  color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;
+  letter-spacing:.05em}
+
+/* FEATURES ROW */
+.features-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding-bottom:68px}
+.feature-mini{padding:16px 14px;border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--border)}
+.feature-mini-icon{font-size:22px;margin-bottom:7px}
+.feature-mini h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.feature-mini p{font-size:12.5px;color:var(--muted);line-height:1.55}
+
+/* ═══ SCAN ═══ */
+.drop-zone{border:2.5px dashed var(--border-strong);border-radius:var(--radius-lg);
+  min-height:240px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;background:var(--surface);transition:all .2s;overflow:hidden;
+  margin-bottom:16px;text-align:center;padding:20px}
+.drop-zone.drag{border-color:var(--primary);background:var(--primary-light)}
+.drop-zone.has-image{cursor:default}
+.drop-zone img{max-height:320px;object-fit:contain}
+.drop-icon{font-size:52px;margin-bottom:16px;animation:floatUp 3s ease-in-out infinite}
+.tip-box{padding:13px 18px;background:var(--amber-light);border:1px solid var(--amber-border);
+  border-radius:var(--radius);font-size:13px;color:#7a5f00;margin-bottom:16px}
+
+/* ═══ VIBE MODE ═══ */
+.vibe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.vibe-card{border-radius:var(--radius-lg);padding:22px 18px;cursor:pointer;
+  border:2.5px solid transparent;transition:all .2s;text-align:center}
+.vibe-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.vibe-card.selected{border-color:var(--primary);box-shadow:0 0 0 3px rgba(196,82,42,.15)}
+.vibe-card-emoji{font-size:38px;display:block;margin-bottom:10px;animation:floatUp 3s ease-in-out infinite}
+.vibe-card-name{font-family:Georgia,serif;font-size:17px;font-weight:700;margin-bottom:4px}
+.vibe-card-desc{font-size:12.5px;color:var(--muted);line-height:1.55}
+
+/* ═══ MYSTERY BASKET ═══ */
+.basket-wrap{background:linear-gradient(135deg,#1A1208,#2E1A0A);
+  border-radius:var(--radius-lg);padding:32px 28px;margin-bottom:20px;color:#fff}
+.basket-title{font-family:Georgia,serif;font-size:26px;margin-bottom:8px;color:#fff}
+.basket-sub{font-size:14px;color:rgba(255,255,255,.65);margin-bottom:24px;line-height:1.6}
+.basket-ingredients{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.basket-ing{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);color:#fff;
+  padding:8px 14px;border-radius:20px;font-size:13.5px;font-weight:500}
+.basket-ing-emoji{font-size:20px}
+.basket-roll-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.3);color:#fff;padding:10px 20px;
+  border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .2s;margin-bottom:0}
+.basket-roll-btn:hover{background:rgba(255,255,255,.25)}
+.basket-challenge-box{background:rgba(255,255,255,.08);border-radius:var(--radius);
+  padding:16px 18px;margin-top:18px;border:1px solid rgba(255,255,255,.15)}
+.basket-challenge-label{font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+.basket-challenge-text{font-size:15px;line-height:1.65;color:rgba(255,255,255,.9)}
+
+/* ═══ STYLE PICKER ═══ */
+.style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.style-card{border-radius:var(--radius);padding:16px 14px;cursor:pointer;
+  border:2px solid transparent;transition:all .2s;position:relative}
+.style-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.style-card.selected{border-color:var(--primary);background:var(--primary-light)}
+.style-card-emoji{font-size:26px;margin-bottom:6px}
+.style-card-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.style-card-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ═══ INGREDIENTS ═══ */
+.ing-card{padding:20px 22px;margin-bottom:14px}
+.ing-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:36px}
+.chip{display:flex;align-items:center;gap:5px;background:var(--primary-light);
+  color:var(--primary);padding:6px 12px;border-radius:20px;font-size:13px;
+  font-weight:500;border:none;cursor:pointer;transition:background .15s}
+.chip:hover{background:#f5c5b0}
+.chip-x{opacity:.6;font-size:18px;line-height:1;margin-left:2px}
+.add-row{display:flex;gap:8px}
+.add-input{flex:1;padding:9px 13px;border:1px solid var(--border);border-radius:8px;
+  font-size:14px;background:var(--bg);color:var(--text);outline:none;transition:border .2s}
+.add-input:focus{border-color:var(--primary)}
+.diet-chips{display:flex;flex-wrap:wrap;gap:8px}
+.diet-chip{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;
+  border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .15s}
+.diet-chip.on{border:2px solid var(--green);background:var(--green-light);
+  color:var(--green);font-weight:600}
+.stats-row{display:flex;gap:12px;margin-bottom:16px}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;text-align:center}
+.stat-n{font-size:20px;font-weight:700;color:var(--primary)}
+.stat-l{font-size:11px;color:var(--muted)}
+
+/* ═══ RECIPES ═══ */
+.recipes-header{display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:14px;flex-wrap:wrap;gap:12px}
+.style-badge-pill{display:inline-flex;align-items:center;gap:6px;
+  background:var(--primary-light);color:var(--primary);font-size:12px;font-weight:600;
+  padding:5px 13px;border-radius:20px}
+.filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{padding:7px 15px;border-radius:20px;font-size:13px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--muted);transition:all .15s}
+.filter-btn.on{border:2px solid var(--primary);background:var(--primary-light);
+  color:var(--primary);font-weight:600}
+.recipe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.recipe-card{overflow:hidden}
+.recipe-emoji-bg{height:120px;display:flex;align-items:center;justify-content:center;font-size:62px}
+.recipe-body{padding:18px 20px 22px}
+.recipe-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
+.recipe-name{font-size:19px;line-height:1.25}
+.diff-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;margin-left:8px;flex-shrink:0}
+.diff-Easy{background:var(--green-light);color:var(--green)}
+.diff-Medium{background:var(--amber-light);color:var(--amber)}
+.diff-Hard{background:var(--primary-light);color:var(--primary)}
+.recipe-desc{font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:10px}
+.recipe-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.recipe-tag{font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;
+  background:var(--surface2);color:var(--muted)}
+.recipe-foot{display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--border);padding-top:12px}
+.recipe-cta{font-size:13px;color:var(--primary);font-weight:600}
+
+/* ═══ COOKING ═══ */
+.cook-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.back-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0;line-height:1;flex-shrink:0}
+.ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:58px;height:58px;margin-left:auto;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg);position:absolute}
+.ring-label{font-size:12px;font-weight:700;color:var(--primary);z-index:1}
+.step-dots{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--light);cursor:pointer;transition:all .2s;flex-shrink:0}
+.step-dot.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-dot.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+.timer-box{background:var(--primary-light);border:2px solid var(--primary-mid);
+  border-radius:var(--radius);padding:12px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.timer-box.warn{background:#fff3e0;border-color:#f57c00;animation:pulse 1s ease-in-out infinite}
+.timer-label{font-size:10.5px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.timer-box.warn .timer-label,.timer-box.warn .timer-digits{color:#f57c00}
+.timer-digits{font-size:28px;font-weight:700;font-family:Georgia,serif;color:var(--primary);letter-spacing:2px;min-width:64px}
+.timer-actions{display:flex;gap:6px}
+.timer-btn-main{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+.timer-btn-reset{background:transparent;color:var(--muted);border:1px solid var(--border);padding:8px 10px;border-radius:8px;font-size:14px;cursor:pointer}
+.timer-start-btn{width:100%;padding:10px 0;margin-bottom:14px;background:transparent;
+  border:1.5px dashed var(--primary-mid);border-radius:10px;color:var(--primary);
+  font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:8px}
+.timer-start-btn:hover{background:var(--primary-light)}
+.step-card{padding:26px 24px;margin-bottom:14px;border:1px solid var(--border);
+  border-radius:var(--radius-lg);background:var(--surface);display:flex;gap:16px;align-items:flex-start;transition:all .3s}
+.step-card.active{box-shadow:0 0 0 3px var(--primary),var(--shadow-lg)}
+.step-num-circle{width:44px;height:44px;min-width:44px;border-radius:50%;background:var(--primary);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}
+.step-num-circle.done-circle{background:var(--green)}
+.step-text{font-family:Georgia,serif;font-size:18px;line-height:1.72;padding-top:5px}
+.chef-tip{padding:13px 17px;background:var(--amber-light);border:1px solid var(--amber-border);
+  border-radius:10px;font-size:14px;color:#7a5f00;margin-bottom:14px}
+.ing-toggle-btn{width:100%;padding:9px 0;margin-bottom:12px;background:transparent;
+  border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.ing-toggle-btn:hover{background:var(--surface2)}
+.ing-ref-box{background:var(--surface2);border-radius:10px;padding:12px 15px;
+  margin-bottom:12px;font-size:13.5px;color:var(--muted);line-height:1.8}
+.cook-nav{display:flex;gap:10px}
+.cook-nav .btn{flex:1;justify-content:center;font-size:14px;padding:13px 0}
+.done-screen{max-width:520px;margin:0 auto;padding:72px 24px;text-align:center}
+.done-emoji{font-size:78px;margin-bottom:18px;display:block}
+.done-xp-box{background:var(--amber-light);border:1px solid var(--amber-border);
+  border-radius:12px;padding:13px 20px;margin-bottom:26px;font-size:14px}
+.progress-bar{background:var(--border);border-radius:4px;height:5px;margin-bottom:18px;overflow:hidden}
+.progress-fill{height:100%;background:var(--primary);border-radius:4px;transition:width .4s ease}
+
+/* ═══ REMIX ═══ */
+.remix-mode-tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.remix-tab{padding:10px 20px;border-radius:24px;font-size:14px;font-weight:600;
+  border:2px solid var(--border);background:var(--surface);color:var(--muted);
+  cursor:pointer;transition:all .2s}
+.remix-tab.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+.remix-input-area{margin-bottom:20px}
+.remix-textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);
+  border-radius:var(--radius);font-size:14px;line-height:1.65;background:var(--surface);
+  color:var(--text);resize:vertical;min-height:80px;outline:none;transition:border .2s}
+.remix-textarea:focus{border-color:var(--primary)}
+.remix-result-card{border-radius:var(--radius-lg);overflow:hidden;margin-top:4px}
+.remix-result-head{padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.remix-result-body{padding:18px 22px}
+.remix-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.remix-item:last-child{border-bottom:none;padding-bottom:0}
+.remix-item-num{width:28px;height:28px;min-width:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.remix-item-text{font-size:14.5px;line-height:1.68;color:var(--text);padding-top:3px}
+
+/* ═══ CHEF CHAT ═══ */
+.chef-chat-float{position:fixed;bottom:26px;right:24px;z-index:900}
+.chef-chat-toggle{width:54px;height:54px;border-radius:50%;background:var(--primary);
+  border:none;color:#fff;font-size:22px;cursor:pointer;
+  box-shadow:0 4px 18px rgba(196,82,42,.45);display:flex;align-items:center;
+  justify-content:center;transition:all .2s}
+.chef-chat-toggle:hover{transform:scale(1.1)}
+.chef-chat-panel{position:fixed;bottom:90px;right:24px;width:320px;
+  background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-xl);
+  border:1px solid var(--border);z-index:900;overflow:hidden;display:none}
+.chef-chat-panel.open{display:block;animation:pop .3s cubic-bezier(.34,1.56,.64,1) both}
+.chef-chat-head{background:var(--primary);padding:12px 16px;display:flex;
+  justify-content:space-between;align-items:center}
+.chef-chat-head-title{color:#fff;font-weight:700;font-size:14px}
+.chef-chat-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;line-height:1}
+.chat-msgs{max-height:230px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+.chat-bubble{padding:8px 12px;border-radius:13px;font-size:13.5px;line-height:1.58;max-width:88%}
+.chat-bubble.ai{background:var(--surface2);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px}
+.chat-bubble.user{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.chat-bubble.typing{color:var(--muted);font-style:italic}
+.chef-chat-input-row{padding:9px 11px;border-top:1px solid var(--border);display:flex;gap:7px}
+.chef-chat-input{flex:1;padding:7px 12px;border:1px solid var(--border);border-radius:18px;font-size:13px;background:var(--bg);outline:none}
+.chef-chat-send{background:var(--primary);color:#fff;border:none;padding:7px 13px;border-radius:18px;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ═══ FEEDBACK ═══ */
+.upload-zone{border:2.5px dashed var(--border-strong);border-radius:var(--radius-lg);
+  min-height:200px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;background:var(--surface);transition:all .2s;overflow:hidden;
+  margin-bottom:16px;text-align:center;padding:20px}
+.upload-zone.has-image{cursor:default}
+.fb-card{overflow:hidden;margin-bottom:16px}
+.fb-header{background:var(--primary);padding:15px 20px;display:flex;justify-content:space-between;align-items:center}
+.fb-header-title{color:#fff;font-family:Georgia,serif;font-size:17px}
+.fb-score-circle{width:56px;height:56px;border-radius:50%;background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fb-score-n{font-size:22px;font-weight:700;font-family:Georgia,serif;color:var(--primary);line-height:1}
+.fb-score-d{font-size:9px;color:var(--muted)}
+.fb-body{padding:18px 22px}
+.fb-row{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.fb-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.fb-row-label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.fb-row-text{font-size:15px;line-height:1.68}
+
+/* ═══ SUBSTITUTION CARD ═══ */
+.sub-card{background:var(--blue-light);border:1.5px solid #90b8e8;border-radius:var(--radius);
+  padding:14px 18px;margin-bottom:14px}
+.sub-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--blue);margin-bottom:10px}
+.sub-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;
+  border-bottom:1px solid rgba(30,95,168,.12);font-size:13.5px}
+.sub-item:last-child{border-bottom:none;padding-bottom:0}
+.sub-from{font-weight:600;color:var(--text);white-space:nowrap}
+.sub-arrow{color:var(--blue);font-size:16px;flex-shrink:0;margin-top:1px}
+.sub-to{color:var(--muted);line-height:1.55}
+
+/* ═══ COMMUNITY ═══ */
+.comm-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.comm-filter-btn{padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--muted);transition:all .15s}
+.comm-filter-btn.on{border:2px solid var(--primary);background:var(--primary-light);color:var(--primary);font-weight:600}
+.sort-btn{padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);color:var(--muted);transition:all .15s}
+.sort-btn.on{border:2px solid var(--green);background:var(--green-light);color:var(--green);font-weight:600}
+.comm-posts{display:flex;flex-direction:column;gap:20px}
+.post-card{overflow:hidden}
+.post-banner{padding:22px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.post-emoji{font-size:50px;line-height:1}
+.post-body{padding:16px 20px}
+.post-user-row{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.post-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.post-username{font-weight:500;font-size:14px}
+.post-diet{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--green-light);color:var(--green);font-weight:600}
+.post-score{margin-left:auto;font-size:13px;font-weight:700;padding:4px 11px;border-radius:12px}
+.post-ai-block{border-radius:10px;padding:12px 14px;margin-bottom:12px;border-left:3px solid;background:var(--bg)}
+.post-ai-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+.post-actions{display:flex;gap:9px}
+.like-btn{display:flex;align-items:center;gap:5px;border:1px solid var(--border);
+  padding:5px 13px;border-radius:20px;font-size:13px;background:var(--bg);
+  cursor:pointer;color:var(--muted);transition:all .15s}
+.like-btn.liked{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+
+/* CONFETTI */
+.confetti-piece{position:fixed;pointer-events:none;z-index:9999;animation:confettiFall 1.4s ease-in forwards}
+
+footer{border-top:1px solid var(--border);padding:22px 24px;margin-top:60px;
+  text-align:center;font-size:12px;color:var(--muted);line-height:1.9;background:var(--surface2)}
+footer strong{color:var(--text)}
+
+@media(max-width:640px){
+  .modes-grid,.features-row,.recipe-grid,.style-grid,.vibe-grid{grid-template-columns:1fr}
+  .modes-grid{grid-template-columns:1fr 1fr}
+  .vibe-grid{grid-template-columns:1fr 1fr}
+  .features-row{grid-template-columns:1fr 1fr}
+  .hero-title{font-size:clamp(30px,9vw,46px)}
+  .chef-chat-float{bottom:16px;right:16px}
+  .chef-chat-panel{width:calc(100vw - 32px);right:16px}
+  #page{padding:0 16px}
+}
+</style>
+</head>
+<body>
+<div id="toast-wrap"></div>
+<div id="confetti-root"></div>
+
+<div id="api-banner">
+  <span style="font-size:15px">🔑</span>
+  <span class="banner-text">
+    Add your <strong style="color:#e8895a">Anthropic API key</strong> to unlock AI photo scanning, creative recipe generation, and chef guidance.
+    <a href="https://console.anthropic.com/account/keys" target="_blank">Get a key →</a>
+  </span>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input id="banner-key-input" class="banner-input" type="password" placeholder="sk-ant-api03-...">
+    <button class="banner-save" onclick="saveApiKey()">Save Key</button>
+    <button class="banner-close-btn" onclick="hideBanner()">×</button>
+  </div>
+  <div class="banner-note">Stored only in your browser. Without a key, smart ingredient-matched recipes still work — AI photo scanning and full generation require the key.</div>
+</div>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <button class="nav-logo" onclick="go('home')">
+      <div class="nav-logo-dot">🍳</div>
+      CookLens
+    </button>
+    <div class="nav-links">
+      <button class="nav-btn" id="nav-scan" onclick="go('scan')">📷 <span>Scan</span></button>
+      <button class="nav-btn" id="nav-vibe" onclick="go('vibe')">✨ <span>Vibe</span></button>
+      <button class="nav-btn" id="nav-mystery" onclick="go('mystery')">🎲 <span>Mystery</span></button>
+      <button class="nav-btn" id="nav-remix" onclick="go('remix')">🔀 <span>Remix</span></button>
+      <button class="nav-btn" id="nav-community" onclick="go('community')">👥 <span>Community</span></button>
+    </div>
+  </div>
+</nav>
+<div id="xp-bar">
+  <span class="xp-label" id="xp-level">Lv.1 Chef</span>
+  <div class="xp-outer"><div class="xp-inner" id="xp-fill"></div></div>
+  <span class="xp-num" id="xp-num">0/100 XP</span>
+</div>
+<div id="page"></div>
+<footer id="footer">
+  <div style="max-width:960px;margin:0 auto">
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px">
+      <span>🍳</span>
+      <span style="font-family:Georgia,serif;font-size:15px;font-weight:700;color:var(--primary)">CookLens</span>
+    </div>
+    <p><strong>© 2026 Benson Chen. All Rights Reserved.</strong></p>
+    <p style="margin-top:4px;font-size:11px;color:var(--light)">All concepts, designs, code and content are the exclusive intellectual property of Benson Chen. Proprietary & Confidential.</p>
+  </div>
+</footer>
+
+<script>
+/* ═══ STATE ═══ */
+const S = {
+  view:'home', ingredients:[], dietPrefs:[], recipes:[], selectedRecipe:null,
+  selectedStyle:null, selectedVibe:null, cookStep:0, cookCompleted:new Set(),
+  cookDone:false, timerSec:null, timerRunning:false, timerInterval:null,
+  chefChatOpen:false, chefMsgs:[], liked:new Set(),
+  commFilter:'All', commSort:'recent', communityPosts:[...SAMPLE_POSTS()],
+  feedbackPreview:null, feedback:null, feedbackLoading:false, feedbackShared:false,
+  showIngRef:false, recipeDiffFilter:'All',
+  // remix state
+  remixMode:'improve', remixInput:'', remixResult:null, remixLoading:false,
+  remixPhotoBase64:null, remixPhotoMediaType:null, remixPhotoPreview:null,
+  // mystery state
+  mysteryIngredients:[], mysteryChallenge:'', mysteryLoading:false,
+  mysterySubMode:'classic',   // 'classic' | 'upload' | 'daily'
+  mysteryUserIngredients:[],  // for upload-and-decide mode
+  mysteryDecision:null,       // AI decision for uploaded ingredients
+  mysteryDailyRecipe:null,    // today's featured random recipe
+  xp:0,
+};
+
+/* ═══ SAMPLE DATA ═══ */
+function SAMPLE_POSTS(){
+  return [
+    {id:1,user:'Maya K.',initials:'MK',avatarBg:'#E8895A',dish:'Shakshuka with Harissa & Labneh',emoji:'🍳',
+     story:'"Cozy & Warm" vibe + Mediterranean style. The harissa from my mystery basket made it ten times better than any recipe I\'ve tried.',diet:'Vegetarian',
+     aiScore:9,aiHighlight:'The spice bloom is clearly visible — gorgeous depth of color and those egg whites are perfectly set.',aiTip:'A swirl of cold labneh cut straight through the heat. Try it next time.',
+     likes:42,comments:8,cardBg:'#FDF6E3',accent:'#D4940A',badge:'Vibe Chef',
+     technique:'Braised',cuisine:'Middle Eastern',
+     recipe:{name:'Shakshuka with Harissa & Labneh',emoji:'🍳',difficulty:'Easy',time:'25 min',
+       steps:[{text:'Heat olive oil in a wide skillet over medium heat. Finely dice 1 onion and cook until translucent and starting to caramelize, about 7 minutes.',duration:8},{text:'Add 4 minced garlic cloves and 1–2 tbsp harissa paste. Cook 90 seconds, stirring constantly, until the paste darkens and smells deeply fragrant.',duration:2},{text:'Pour in one 400g can crushed tomatoes. Season with cumin, salt, and a pinch of sugar. Simmer 10 minutes until thick.',duration:10},{text:'Use a spoon to create 4 wells in the sauce. Crack one egg into each well. Cover with a lid.',duration:1},{text:'Cook 5–6 minutes on medium-low — whites set, yolks still runny. Top with cold labneh, fresh herbs, and crusty bread.',duration:5}],
+       tip:'The labneh must be cold when it hits the hot dish — the contrast is what makes this dish sing.'}},
+    {id:2,user:'James T.',initials:'JT',avatarBg:'#2D5016',dish:'Mystery Basket Puttanesca',emoji:'🍝',
+     story:'Mystery Basket: anchovies, capers, miso, farro. The AI suggested a puttanesca-miso fusion and I was skeptical. I was wrong.',diet:'',
+     aiScore:8,aiHighlight:'Restaurant-level sauce concentration — you could see the reduction clearly on the plate.',aiTip:'Toasted panko on top would add textural contrast that balances the richness.',
+     likes:31,comments:5,cardBg:'#EAF0E1',accent:'#2D5016',badge:'Mystery Master',
+     technique:'Pan sauce',cuisine:'Italian-Japanese Fusion',
+     recipe:{name:'Miso-Puttanesca Farro',emoji:'🍝',difficulty:'Medium',time:'30 min',
+       steps:[{text:'Cook farro in heavily salted water until tender but with bite, about 25 minutes. Reserve 1 cup cooking liquid.',duration:25},{text:'In a wide skillet, warm olive oil over medium. Add 4 anchovy fillets — they will melt completely into the oil in 2 minutes.',duration:3},{text:'Add garlic, chili flakes, capers, and olives. Cook 3 minutes until fragrant.',duration:3},{text:'Stir in 1 tbsp white miso dissolved in the farro cooking liquid. Simmer until glossy, 3 minutes.',duration:3},{text:'Toss farro into the sauce. Fold through, taste, and finish with lemon zest and parsley.',duration:2}],
+       tip:'The anchovies are not optional — they dissolve completely and become the umami backbone, not fishy at all.'}},
+    {id:3,user:'Priya S.',initials:'PS',avatarBg:'#C4522A',dish:'Budget Fancy Tacos al Pastor',emoji:'🌮',
+     story:'"Budget Hero" + Vegan filter. Total ingredient cost: $4.20. Three people thought I ordered from a restaurant.',diet:'Vegan',
+     aiScore:10,aiHighlight:'Stunning color contrast — the charred pineapple against the red-marinated jackfruit is genuinely magazine-worthy.',aiTip:'You\'re already at 10/10. The only move up is a fresh masa tortilla.',
+     likes:67,comments:14,cardBg:'#F9EDE5',accent:'#C4522A',badge:'Budget Wizard',
+     technique:'Marinated & charred',cuisine:'Mexican',
+     recipe:{name:'Jackfruit Tacos al Pastor',emoji:'🌮',difficulty:'Medium',time:'35 min',
+       steps:[{text:'Drain and roughly shred 2 cans young jackfruit. Press dry with towels — moisture is the enemy of char.',duration:5},{text:'Mix: 2 tbsp achiote paste, chipotle in adobo, cumin, oregano, pineapple juice, garlic. Toss with jackfruit. Marinate 20 min minimum.',duration:20},{text:'Heat a cast-iron over high heat until smoking. Add jackfruit in a single layer — do NOT touch for 3 minutes. Let it char.',duration:4},{text:'Flip. Add fresh pineapple chunks. Char 2 more minutes.',duration:2},{text:'Serve on warm corn tortillas with white onion, cilantro, and lime. The charred bits are the best part.',duration:2}],
+       tip:'Pressing the jackfruit completely dry before marinating is what separates good from excellent. Don\'t skip it.'}},
+    {id:4,user:'Lucas W.',initials:'LW',avatarBg:'#1E5FA8',dish:'Dashi Scrambled Eggs',emoji:'🥚',
+     story:'"Healthy Glow" + Japanese style. CookLens told me to add a splash of dashi to my scramble. Life-changing. Literally just eggs.',diet:'',
+     aiScore:8,aiHighlight:'The texture looks incredibly silky — you can see the curd structure is perfect from the photo.',aiTip:'Try topping with furikake and a few drops of good soy for the full Japanese breakfast feel.',
+     likes:28,comments:6,cardBg:'#E8F0FB',accent:'#1E5FA8',badge:'Technique Nerd',
+     technique:'Low & slow',cuisine:'Japanese-influenced',
+     recipe:{name:'Dashi Scrambled Eggs on Toast',emoji:'🥚',difficulty:'Easy',time:'8 min',
+       steps:[{text:'Make instant dashi: dissolve 1 tsp dashi powder in 2 tbsp hot water. Let cool 1 minute.',duration:1},{text:'Whisk 3 eggs with the cooled dashi and a pinch of salt. The dashi adds umami without making it taste "fishy".',duration:1},{text:'Add butter to a cold non-stick pan. Turn to medium-low. Pour in eggs immediately — do not wait for the butter to bubble.',duration:1},{text:'Stir constantly with a silicone spatula, scraping the bottom in a figure-8. Remove from heat every 30 seconds.',duration:4},{text:'Pull when still slightly wet — they finish on the toast. Top with chives and a drop of soy sauce.',duration:1}],
+       tip:'Starting eggs in a cold pan gives you 60 extra seconds of control. Once a pan is hot, it\'s already too late.'}},
+    {id:5,user:'Amara D.',initials:'AD',avatarBg:'#6B3FA0',dish:'Berbere Lentil Soup',emoji:'🍲',
+     story:'Daily Recipe feature picked Ethiopian cuisine today. I had zero Ethiopian ingredients — CookLens built it from pantry staples. Unreal.',diet:'Vegan',
+     aiScore:9,aiHighlight:'The color from that berbere-spiced broth is gorgeous — proper depth of red-orange.',aiTip:'A fried egg on top with more berbere butter would make this a full restaurant-level bowl.',
+     likes:54,comments:11,cardBg:'#F3E8FF',accent:'#6B3FA0',badge:'Daily Chef',
+     technique:'Slow-simmered',cuisine:'Ethiopian',
+     recipe:{name:'Red Lentil Berbere Soup',emoji:'🍲',difficulty:'Easy',time:'35 min',
+       steps:[{text:'Bloom 1.5 tbsp berbere spice (or: smoked paprika + cumin + coriander + cayenne + cinnamon) in 2 tbsp butter over medium heat for 90 seconds.',duration:2},{text:'Add diced onion and cook 8 minutes until deeply golden. This is your flavor base — don\'t rush it.',duration:8},{text:'Add 4 minced garlic cloves and 1 tbsp tomato paste. Cook 2 minutes more.',duration:2},{text:'Add 200g red lentils, 1L vegetable stock, and a pinch of salt. Bring to a boil then reduce.',duration:5},{text:'Simmer 18 minutes until lentils dissolve. Finish with lemon juice and a drizzle of berbere butter.',duration:18}],
+       tip:'Berbere butter — extra butter, extra berbere, pour it on at the end — is what makes this taste restaurant-caliber.'}},
+    {id:6,user:'Sofia R.',initials:'SR',avatarBg:'#D4940A',dish:'Miso Brown Butter Corn Pasta',emoji:'🍝',
+     story:'Tried the "Impress Someone" vibe. Four ingredients, 20 minutes, looked like I spent three hours. My date was very confused.',diet:'Vegetarian',
+     aiScore:10,aiHighlight:'Brown butter and miso is one of the best flavour pairings in food — this photo shows it was executed perfectly.',aiTip:'Reserve more pasta water than you think you need. You\'ll use it.',
+     likes:89,comments:19,cardBg:'#FEF9C3',accent:'#D4940A',badge:'Flavor Scientist',
+     technique:'Emulsified sauce',cuisine:'Italian-Japanese',
+     recipe:{name:'Miso Brown Butter Corn Pasta',emoji:'🍝',difficulty:'Medium',time:'20 min',
+       steps:[{text:'Cook pasta in heavily salted water until al dente. Reserve 2 cups pasta water.',duration:9},{text:'In a wide skillet, melt 4 tbsp butter over medium heat, swirling constantly. Cook until the milk solids turn deep golden and smell nutty — about 4 minutes.',duration:4},{text:'Remove from heat. Stir in 2 tbsp white miso until dissolved. The miso amplifies the nuttiness exponentially.',duration:1},{text:'Add corn kernels (fresh or frozen). Return to medium heat 2 minutes.',duration:2},{text:'Add pasta and 1/2 cup pasta water. Toss vigorously to emulsify. Add more water as needed for a glossy sauce. Top with parmesan and chives.',duration:3}],
+       tip:'Pull the butter off heat to stir in the miso — if you add miso while the pan is too hot, it gets grainy instead of silky.'}},
+  ];
+}
+
+const DIET_OPTIONS = ['Vegan','Vegetarian','Gluten-Free','Dairy-Free','Halal','Keto','Low-Carb','Nut-Free'];
+
+const VIBES = [
+  {id:'cozy',emoji:'🛋️',name:'Cozy & Warm',desc:'Something that hugs you from the inside. Comfort all the way.',color:'#FFF8F0',border:'#E8C4A0',tag:'#E8895A'},
+  {id:'spicy',emoji:'🔥',name:'Spicy & Bold',desc:'Turn up the heat. Big flavors, big personality.',color:'#FFF3E0',border:'#F4A261',tag:'#E76F51'},
+  {id:'quick',emoji:'⚡',name:'Quick & Easy',desc:'Under 20 minutes, no stress, still delicious.',color:'#F0F8FF',border:'#90CAF9',tag:'#1E88E5'},
+  {id:'impress',emoji:'🌟',name:'Impress Someone',desc:'Date night energy. Fancy but totally doable.',color:'#F3E8FF',border:'#CE93D8',tag:'#7B1FA2'},
+  {id:'study',emoji:'📚',name:'Study Night',desc:'Brain food. Minimal cleanup, maximum focus.',color:'#E8F5E9',border:'#A5D6A7',tag:'#2D5016'},
+  {id:'healthy',emoji:'🌿',name:'Healthy & Light',desc:'Nourishing, fresh, and satisfying without the guilt.',color:'#E0F7FA',border:'#80DEEA',tag:'#006064'},
+];
+
+const RECIPE_STYLES = [
+  {id:'comfort',emoji:'🧸',name:'Comfort Food',desc:'Soul-warming classics that feel like a hug',bg:'#FFF8F0'},
+  {id:'healthy',emoji:'🥗',name:'Healthy Glow',desc:'Clean, nourishing, and actually filling',bg:'#E8F5E9'},
+  {id:'fancy',emoji:'🍷',name:'Restaurant Fancy',desc:'Elevated plating, complex flavors, dinner party-worthy',bg:'#F3E8FF'},
+  {id:'budget',emoji:'💰',name:'Budget Hero',desc:'Maximum flavor, minimum cost. Smart cooking.',bg:'#FEF9C3'},
+  {id:'asian',emoji:'🥢',name:'Asian Fusion',desc:'Umami-forward, aromatic, balanced heat',bg:'#FFF3E0'},
+  {id:'mediterranean',emoji:'🫒',name:'Mediterranean',desc:'Olive oil, herbs, bright acidity, ancient wisdom',bg:'#E0F7FA'},
+  {id:'mexican',emoji:'🌶️',name:'Mexican Soul',desc:'Bold spices, layered flavors, fresh finishes',bg:'#FFF9C4'},
+  {id:'quick',emoji:'⚡',name:'30-Minute Meals',desc:'Fast, practical, no compromises on taste',bg:'#F0F4FF'},
+  {id:'surprise',emoji:'🎲',name:'Surprise Me',desc:"Let the AI choose whatever fits best",bg:'#FCE4EC'},
+];
+
+const MYSTERY_INGREDIENT_POOL = [
+  {name:'canned anchovies',emoji:'🐟'},{name:'miso paste',emoji:'🫙'},{name:'tamarind',emoji:'🍋'},
+  {name:'pomegranate molasses',emoji:'🍇'},{name:'fish sauce',emoji:'🫙'},{name:'sumac',emoji:'🌺'},
+  {name:'za\'atar',emoji:'🌿'},{name:'preserved lemons',emoji:'🍋'},{name:'harissa',emoji:'🌶️'},
+  {name:'tahini',emoji:'🫙'},{name:'coconut milk',emoji:'🥥'},{name:'gochujang',emoji:'🫙'},
+  {name:'capers',emoji:'🫙'},{name:'smoked paprika',emoji:'🌶️'},{name:'nutritional yeast',emoji:'🌾'},
+  {name:'white miso',emoji:'🫙'},{name:'toasted sesame oil',emoji:'🫙'},{name:'rice wine vinegar',emoji:'🫙'},
+  {name:'dried porcini',emoji:'🍄'},{name:'saffron',emoji:'🌸'},{name:'ras el hanout',emoji:'🌺'},
+  {name:'chickpeas',emoji:'🫘'},{name:'cannellini beans',emoji:'🫘'},{name:'lentils',emoji:'🫘'},
+  {name:'arborio rice',emoji:'🍚'},{name:'polenta',emoji:'🌽'},{name:'farro',emoji:'🌾'},
+  {name:'eggs',emoji:'🥚'},{name:'sourdough bread',emoji:'🍞'},{name:'aged parmesan',emoji:'🧀'},
+  {name:'prosciutto',emoji:'🥩'},{name:'pancetta',emoji:'🥩'},{name:'chorizo',emoji:'🌭'},
+  {name:'leeks',emoji:'🌱'},{name:'fennel',emoji:'🌿'},{name:'celeriac',emoji:'🥬'},
+  {name:'radicchio',emoji:'🥬'},{name:'endive',emoji:'🥬'},{name:'chard',emoji:'🥬'},
+];
+
+/* ═══ API KEY ═══ */
+function getKey(){try{return localStorage.getItem('cooklens_key')||''}catch{return ''}}
+function saveApiKey(){
+  const v=document.getElementById('banner-key-input').value.trim();
+  if(!v.startsWith('sk-ant-')){toast('Key must start with sk-ant-','error');return}
+  try{localStorage.setItem('cooklens_key',v)}catch{}
+  toast('✓ API key saved — all AI features unlocked!','success');
+  hideBanner();
+}
+function hideBanner(){document.getElementById('api-banner').classList.add('hidden')}
+if(getKey())hideBanner();
+
+/* ═══ ANTHROPIC API ═══ */
+async function callClaude(messages,sys=''){
+  const key=getKey();
+  const body={model:'claude-sonnet-4-20250514',max_tokens:1200,messages};
+  if(sys)body.system=sys;
+  const headers={'Content-Type':'application/json','anthropic-version':'2023-06-01',
+    'anthropic-dangerous-direct-browser-access':'true'};
+  if(key){headers['x-api-key']=key;headers['Authorization']='Bearer '+key}
+  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers,body:JSON.stringify(body)});
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||'HTTP '+res.status)}
+  const data=await res.json();
+  return data.content?.[0]?.text||'';
+}
+
+async function detectIngredients(base64,mediaType){
+  const msgs=[{role:'user',content:[
+    {type:'image',source:{type:'base64',media_type:mediaType,data:base64}},
+    {type:'text',text:'List every food item, ingredient, and condiment visible. Return ONLY a JSON array of strings. Example: ["eggs","garlic","pasta"]'},
+  ]}];
+  const t=await callClaude(msgs);
+  const m=t.match(/\[[\s\S]*?\]/);
+  if(!m)throw new Error('No JSON');
+  return JSON.parse(m[0]);
+}
+
+async function generateRecipes(ings,diets,style,vibe){
+  const d=diets.length?'Dietary constraints (non-negotiable): '+diets.join(', ')+'.':'';
+  const styleNote=style&&style.id!=='surprise'?`Cooking style: ${style.name} — ${style.desc}. Let this personality define technique, presentation, and flavor profile.`:'';
+  const vibeNote=vibe?`Mood/energy: ${vibe.name} — ${vibe.desc}. Shape the pacing, comfort level, and dish personality around this.`:'';
+  // Pick 2 random cuisine inspirations to force diversity each call
+  const CUISINES=['Japanese','Korean','Vietnamese','Thai','Indian','Moroccan','Turkish','Persian','Ethiopian','Mexican','Peruvian','Italian','French','Spanish','Greek','Lebanese','Brazilian','Indonesian'];
+  const c1=CUISINES[Math.floor(Math.random()*CUISINES.length)];
+  const c2=CUISINES.filter(c=>c!==c1)[Math.floor(Math.random()*(CUISINES.length-1))];
+  const prompt=`You are a James Beard Award-winning chef with deep knowledge of world cuisines and modern cooking techniques.
+
+Available ingredients: ${ings.join(', ')}
+${d}
+${styleNote}
+${vibeNote}
+
+Create exactly 3 DISTINCT and CREATIVE dishes. STRICT rules:
+1. Each dish must use a DIFFERENT primary cooking technique (e.g. one braised, one roasted, one raw/cured — never all three the same method)
+2. Each dish must draw from a DIFFERENT culinary tradition — consider influences from ${c1}, ${c2}, and one other tradition you think fits best
+3. NEVER name dishes generically ("pasta with garlic", "chicken stir-fry"). Use evocative, specific names that telegraph flavor and origin
+4. Each recipe must include at least one unexpected flavor pairing or technique that a home cook wouldn't think of themselves
+5. Steps must be precise, technical, and educational — teach the "why" behind each step, not just the "what"
+6. The "tip" field must contain a specific professional insight most home cooks don't know
+
+Return ONLY valid JSON array, no markdown, no explanation:
+[{
+  "name":"Evocative dish name",
+  "emoji":"🍜",
+  "time":"25 min",
+  "difficulty":"Medium",
+  "description":"One sentence that makes someone hungry and curious — include the key unexpected element",
+  "why":"One sentence on why this specific dish works with these ingredients and this style/vibe",
+  "technique":"Primary cooking method (e.g. braising, raw, wok-fried, slow-roasted)",
+  "cuisine":"Culinary tradition this draws from",
+  "steps":[{"text":"Precise step with the why explained","duration":3}],
+  "tip":"Professional chef insight most home cooks don't know",
+  "tags":["tag1","tag2","tag3"],
+  "nutrition":{"calories":420,"protein":"14g","carbs":"38g"}
+}]
+
+Remember: DIVERSITY is mandatory. Three different techniques, three different cuisines, zero generic dishes.`;
+  const t=await callClaude([{role:'user',content:prompt}],`You are a creative, technically precise cookbook author. Never suggest the same type of dish twice in one response. Prioritize unexpected, inspired combinations that actually taste great together.`);
+  const m=t.match(/\[[\s\S]*\]/);
+  if(!m)throw new Error('No JSON');
+  const parsed=JSON.parse(m[0]);
+  if(!Array.isArray(parsed)||!parsed.length)throw new Error('Empty');
+  return parsed;
+}
+
+async function getDishFeedback(base64,mediaType,recipeName){
+  const msgs=[{role:'user',content:[
+    {type:'image',source:{type:'base64',media_type:mediaType,data:base64}},
+    {type:'text',text:`This is my attempt at "${recipeName}". Give warm, encouraging chef feedback. Return ONLY valid JSON:
+{"score":8,"presentation":"1-2 sentences on plating","highlight":"what looks genuinely impressive","tip":"one specific actionable improvement","badge":"fun creative achievement name","nextLevel":"one thing to try next time to go from good to great"}`},
+  ]}];
+  const t=await callClaude(msgs);
+  const m=t.match(/\{[\s\S]*?\}/);
+  if(!m)throw new Error('No JSON');
+  return JSON.parse(m[0]);
+}
+
+async function askChefAI(question,recipeName,stepText){
+  const prompt=`You are a warm, creative chef partner (not just an assistant). The cook is making "${recipeName}" on step: "${stepText}". Question: "${question}". Answer in 2-3 sentences — be specific, practical, and a little playful.`;
+  return await callClaude([{role:'user',content:prompt}]);
+}
+
+async function getMysteryChallenge(ingredients){
+  const names=ingredients.map(i=>i.name||i).join(', ');
+  const prompt=`You're a creative chef giving a fun cooking challenge. Mystery basket ingredients: ${names}.
+Create ONE exciting challenge recipe. Return ONLY valid JSON:
+{"challenge":"One sentence creative challenge description (make it dramatic and fun)","name":"dish name","why":"why this combo works unexpectedly well","difficulty":"Medium","steps":["step1","step2","step3","step4","step5"]}`;
+  const t=await callClaude([{role:'user',content:prompt}]);
+  const m=t.match(/\{[\s\S]*?\}/);
+  if(!m)throw new Error('No JSON');
+  return JSON.parse(m[0]);
+}
+
+// Mystery sub-mode: upload your pantry, AI decides for you
+async function getMysteryDecision(ingredients){
+  const prompt=`A home cook can't decide what to make. They have: ${ingredients.join(', ')}.
+Roll the dice for them — pick ONE specific dish and commit to it with confidence and enthusiasm.
+Return ONLY valid JSON (no markdown):
+{"dish":"Dish name","emoji":"🍳","decision":"One confident sentence telling them exactly what to cook and why RIGHT NOW","difficulty":"Easy","time":"20 min","topTip":"One key technique that makes this dish work","steps":[{"text":"step","duration":3},{"text":"step","duration":4},{"text":"step","duration":2},{"text":"step","duration":3},{"text":"step","duration:2"}]}`;
+  const t=await callClaude([{role:'user',content:prompt}]);
+  const m=t.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error('No JSON');
+  const parsed=JSON.parse(m[0]);
+  if(!parsed.steps)parsed.steps=[{text:'Prepare all ingredients.',duration:5},{text:'Cook according to the technique.',duration:10},{text:'Taste and season.',duration:2},{text:'Plate and serve.',duration:2}];
+  return parsed;
+}
+
+// Mystery sub-mode: today's daily recipe (seeded by date so same all day)
+function getDailyRecipeSeed(){
+  const d=new Date();
+  const seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  return seed;
+}
+async function generateDailyRecipe(){
+  const seed=getDailyRecipeSeed();
+  const cuisines=['Japanese','Korean','Italian','Mexican','Indian','French','Thai','Moroccan','Greek','Vietnamese'];
+  const techniques=['braised','wok-fried','slow-roasted','raw/cured','steamed','pan-seared','grilled'];
+  const ci=seed%cuisines.length, ti=(seed+3)%techniques.length;
+  const prompt=`Today's featured cuisine: ${cuisines[ci]}. Technique: ${techniques[ti]}.
+Create ONE exciting recipe using ONLY these pantry staples that most people have: eggs, onion, garlic, olive oil, canned tomatoes, pasta/rice, salt, pepper, and 1-2 spices.
+Make it feel special — this is the dish of the day. Return ONLY valid JSON:
+{"name":"dish name","emoji":"🍳","cuisine":"${cuisines[ci]}","technique":"${techniques[ti]}","tagline":"One sentence that makes this sound irresistible","story":"2 sentences on the cultural origin and why it's worth making today","difficulty":"Easy","time":"25 min","steps":[{"text":"step","duration":4},{"text":"step","duration":6},{"text":"step","duration":3},{"text":"step","duration":5},{"text":"step","duration":2}],"tip":"Pro chef insight"}`;
+  const t=await callClaude([{role:'user',content:prompt}]);
+  const m=t.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error('No JSON');
+  return JSON.parse(m[0]);
+}
+
+async function getRemixSuggestions(dish,mode,photoBase64,photoMediaType){
+  const hasPhoto=photoBase64&&photoMediaType;
+  const photoContext=hasPhoto?'I\'m also sending you a photo of the dish so you can give visual, specific feedback.':'';
+  const prompts={
+    improve:`Dish: "${dish}". ${photoContext} Suggest 4 concrete ways to improve it — technique, seasoning, timing, or ingredient upgrades. Be specific to THIS dish. Return ONLY JSON: {"title":"Upgrade Path","color":"#C4522A","items":["tip1","tip2","tip3","tip4"]}`,
+    plating:`Dish: "${dish}". ${photoContext} Give 4 creative plating techniques to make this look restaurant-quality. Focus on height, color contrast, garnish, and sauce placement. ${hasPhoto?'Reference what you can see in the photo.':''} Return ONLY JSON: {"title":"Plating Glow-Up","color":"#6B3FA0","items":["tip1","tip2","tip3","tip4"]}`,
+    leftover:`Dish: "${dish}" — I have leftovers. ${photoContext} Suggest 4 creative ways to transform them into entirely new meals. Be imaginative and specific. Return ONLY JSON: {"title":"Leftover Alchemy","color":"#2D5016","items":["tip1","tip2","tip3","tip4"]}`,
+    substitute:`Dish: "${dish}" — I'm missing some ingredients. Suggest 4 smart substitutions that actually work. Format each as "X → Y: reason why this works". Return ONLY JSON: {"title":"Smart Swaps","color":"#1E5FA8","items":["swap1","swap2","swap3","swap4"]}`,
+  };
+  const txt=prompts[mode]||prompts.improve;
+  let messages;
+  if(hasPhoto){
+    messages=[{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:photoMediaType,data:photoBase64}},
+      {type:'text',text:txt},
+    ]}];
+  }else{
+    messages=[{role:'user',content:txt}];
+  }
+  const t=await callClaude(messages);
+  const m=t.match(/\{[\s\S]*?\}/);
+  if(!m)throw new Error('No JSON');
+  return JSON.parse(m[0]);
+}
+
+/* ═══ INGREDIENT-AWARE FALLBACK ═══ */
+function buildFallbackRecipes(ings,style,vibe){
+  const has=kw=>ings.some(i=>i.toLowerCase().includes(kw.toLowerCase()));
+  const styleName=style?.name||'';
+  const pool=[
+    {test:()=>has('pasta')||has('noodle'),make:()=>({
+      name:'Golden Garlic Pasta',emoji:'🍝',time:'20 min',difficulty:'Easy',
+      description:'Silky pasta with caramelized garlic and toasted breadcrumbs.',
+      why:vibe?`Perfect for a ${vibe.name.toLowerCase()} moment.`:'A pantry classic elevated.',
+      steps:[{text:'Bring salted water to a rolling boil. Cook pasta until 1 min shy of al dente. Reserve 1 cup starchy water.',duration:8},{text:'In a wide skillet, heat butter over medium heat. Add minced garlic and cook 3 min until deeply golden.',duration:4},{text:'Add pasta to skillet with a splash of pasta water. Toss vigorously to emulsify into a silky sauce.',duration:2},{text:'If you have breadcrumbs or panko, toast them separately until golden and crunchy.',duration:3},{text:'Season well, plate, and top with breadcrumbs and any fresh herbs.',duration:1}],
+      tip:'The pasta water is the sauce. Go generous with it.',tags:['quick','pantry','vegetarian'],nutrition:{calories:420,protein:'12g',carbs:'58g'}})},
+    {test:()=>has('egg'),make:()=>({
+      name:'Perfect Scrambled Eggs',emoji:'🥚',time:'10 min',difficulty:'Easy',
+      description:'Low and slow scrambled eggs — custardy, creamy, life-changing.',
+      why:vibe?`Ideal ${vibe.name.toLowerCase()} energy.`:'The most underrated technique in cooking.',
+      steps:[{text:'Whisk eggs with salt and pepper. Add a splash of cream or water if you have it.',duration:1},{text:'Melt butter in cold pan then turn to medium-low heat. Add eggs immediately.',duration:1},{text:'Stir constantly with a rubber spatula, moving eggs slowly across the pan.',duration:3},{text:'Remove from heat every 30 seconds — residual heat keeps cooking. You want loose curds.',duration:3},{text:'Remove when still slightly underdone. They\'ll finish on the plate.',duration:1}],
+      tip:'The moment they look done, they\'re overdone. Pull early every time.',tags:['quick','protein-rich','breakfast'],nutrition:{calories:280,protein:'20g',carbs:'3g'}})},
+    {test:()=>has('rice'),make:()=>({
+      name:'Crispy Fried Rice',emoji:'🍚',time:'18 min',difficulty:'Easy',
+      description:'Wok-kissed fried rice with crispy edges and smoky depth.',
+      why:vibe?`Great for ${vibe.name.toLowerCase()} vibes.`:'Cold leftover rice is the secret ingredient.',
+      steps:[{text:'Have all ingredients prepped. This moves fast — no time to chop mid-cook.',duration:3},{text:'Heat oil in wok or wide pan until very hot, almost smoking.',duration:2},{text:'Add aromatics and any protein. Stir-fry without stopping for 3 minutes.',duration:3},{text:'Push to sides. Scramble eggs in the center until just set.',duration:2},{text:'Add rice, breaking up any clumps. Add soy sauce and toss 3 min until crispy.',duration:4}],
+      tip:'Day-old cold rice = crispy edges. Fresh rice = mushy. Plan ahead.',tags:['quick','savory','wok-friendly'],nutrition:{calories:390,protein:'16g',carbs:'52g'}})},
+    {test:()=>has('tomato'),make:()=>({
+      name:'Slow-Cooked Tomato Stew',emoji:'🍲',time:'30 min',difficulty:'Easy',
+      description:'Deeply savory tomato base that works with anything you throw at it.',
+      why:vibe?`Built for ${vibe.name.toLowerCase()} energy.`:'The most versatile thing you can make.',
+      steps:[{text:'Sauté onion and garlic in generous olive oil over medium heat for 6 minutes.',duration:6},{text:'Add any spices you have — cumin, paprika, chili. Stir 1 min to bloom.',duration:1},{text:'Add tomatoes. Season generously with salt.',duration:1},{text:'Simmer uncovered 18 minutes until thick and deep in color.',duration:18},{text:'Taste, adjust. Add anything from your fridge that needs using up.',duration:2}],
+      tip:'Go longer — the longer it cooks, the better it gets.',tags:['versatile','plant-based','batch-cook'],nutrition:{calories:310,protein:'8g',carbs:'38g'}})},
+    {test:()=>true,make:()=>({
+      name:((ings[0]||'Pantry').charAt(0).toUpperCase()+(ings[0]||'Pantry').slice(1))+' Stir-Fry',
+      emoji:'🥘',time:'20 min',difficulty:'Easy',
+      description:`A quick, improvised stir-fry built around ${ings.slice(0,3).join(', ')}.`,
+      why:'Sometimes the best dish is the one you make with what you have.',
+      steps:[{text:`Prep everything before you start: chop ${ings.slice(0,3).join(', ')} into similar-sized pieces.`,duration:5},{text:'Heat oil in a wide pan over high heat until shimmering.',duration:2},{text:'Add firmer ingredients first. Let them sit for 90 seconds before stirring.',duration:3},{text:`Add softer ingredients. Toss everything constantly for 2 minutes.`,duration:2},{text:'Season with whatever sauces you have. Toss. Taste. Adjust. Serve.',duration:2}],
+      tip:'High heat is everything. Low heat makes stir-fry sad.',tags:['flexible','quick','improvised'],nutrition:{calories:300,protein:'12g',carbs:'28g'}}),
+    },
+  ];
+  const matched=pool.filter(p=>p.test());
+  const picks=[];
+  for(const p of matched){if(picks.length<3)picks.push(p.make())}
+  while(picks.length<3)picks.push(pool[pool.length-1].make());
+  return picks.slice(0,3);
+}
+
+/* ═══ TOAST ═══ */
+function toast(msg,type='',dur=3200){
+  const wrap=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className='toast '+type;el.textContent=msg;wrap.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateY(8px)';setTimeout(()=>el.remove(),320)},dur);
+}
+
+/* ═══ CONFETTI ═══ */
+function fireConfetti(){
+  const root=document.getElementById('confetti-root');
+  const colors=['#C4522A','#D4940A','#2D5016','#E8895A','#F9EDE5','#FFF','#6B3FA0'];
+  for(let i=0;i<55;i++){
+    const el=document.createElement('div');el.className='confetti-piece';
+    const size=5+Math.random()*10;
+    el.style.cssText=`left:${Math.random()*100}vw;top:-12px;width:${size}px;height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      transform:rotate(${Math.random()*360}deg);
+      animation-delay:${Math.random()*.7}s;
+      animation-duration:${1.1+Math.random()*.9}s;`;
+    root.appendChild(el);setTimeout(()=>el.remove(),2600);
+  }
+}
+
+/* ═══ XP ═══ */
+function addXP(pts){
+  S.xp+=pts;
+  const level=Math.floor(S.xp/100)+1,pct=S.xp%100;
+  document.getElementById('xp-level').textContent='Lv.'+level+' Chef';
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-num').textContent=pct+'/100 XP';
+  toast('+'+pts+' XP earned!','success');
+}
+
+/* ═══ DOM HELPERS ═══ */
+function h(tag,attrs,...children){
+  const el=document.createElement(tag);
+  if(attrs)Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='class')el.className=v;
+    else if(k==='style')el.style.cssText=v;
+    else if(k.startsWith('on'))el[k]=v;
+    else el.setAttribute(k,v);
+  });
+  children.flat().forEach(c=>{if(c==null||c===false)return;el.appendChild(typeof c==='string'?document.createTextNode(c):c)});
+  return el;
+}
+function fileToBase64(file){
+  return new Promise(res=>{const r=new FileReader();r.onload=e=>res({base64:e.target.result.split(',')[1],mediaType:file.type});r.readAsDataURL(file)});
+}
+function formatTime(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+
+/* ═══ ROUTER ═══ */
+function go(view){
+  if(S.timerInterval){clearInterval(S.timerInterval);S.timerInterval=null;S.timerRunning=false}
+  if(view!=='cooking')S.chefChatOpen=false;
+  S.view=view;render();window.scrollTo({top:0,behavior:'smooth'});
+  ['scan','vibe','mystery','remix','community'].forEach(v=>{
+    const btn=document.getElementById('nav-'+v);
+    if(btn)btn.classList.toggle('active',v===view);
+  });
+  const old=document.getElementById('chef-chat-float');if(old)old.remove();
+  if(view==='cooking')setupChefChat();
+}
+
+/* ═══ MAIN RENDER ═══ */
+function render(){
+  const page=document.getElementById('page');page.innerHTML='';
+  const views={home:renderHome,scan:renderScan,vibe:renderVibe,mystery:renderMystery,
+    ingredients:renderIngredients,style:renderStylePicker,recipes:renderRecipes,
+    cooking:renderCooking,feedback:renderFeedback,community:renderCommunity,remix:renderRemix};
+  const node=(views[S.view]||renderHome)();
+  if(node)page.appendChild(node);
+}
+
+/* ═══════════════════════ HOME ═══════════════════════ */
+function renderHome(){
+  const wrap=h('div',{class:'page-section'});
+  wrap.appendChild(h('div',{class:'home-hero fade-up'},
+    h('div',{class:'hero-eyebrow'},'✨ Your AI Culinary Partner'),
+    h('h1',{class:'hero-title'},'What shall we\ncreate ',h('em',{},'today'),'\u00a0?'),
+    h('p',{class:'hero-sub'},'Tell CookLens what you have, what you\'re feeling, or dare it to challenge you — it cooks with you, not just for you.')
+  ));
+
+  const modes=[
+    {id:'scan',cls:'mode-card-classic',icon:'📷',tagC:'#C4522A',tagBg:'#F9EDE5',tag:'CLASSIC MODE',
+     title:'Cook with What You Have',desc:'Scan your fridge, get creative recipes, cook step-by-step with a live timer and AI chef on standby.',
+     cta:'Scan my fridge →',ctaC:'#C4522A',isNew:false},
+    {id:'vibe',cls:'mode-card-vibe',icon:'✨',tagC:'#6B3FA0',tagBg:'#F0EAF9',tag:'MOOD COOKING',
+     title:'Cook by Vibe',desc:'Pick a mood — cozy, spicy, quick, impressive — and let the AI design something that matches the energy.',
+     cta:'Choose my vibe →',ctaC:'#6B3FA0',isNew:true},
+    {id:'mystery',cls:'mode-card-mystery',icon:'🎲',tagC:'#2D5016',tagBg:'#EAF0E1',tag:'CHALLENGE MODE',
+     title:'Mystery Basket',desc:'Get a random basket of surprising ingredients and see if the AI — and you — can turn it into something worth eating.',
+     cta:'Roll the basket →',ctaC:'#2D5016',isNew:true},
+    {id:'remix',cls:'mode-card-remix',icon:'🔀',tagC:'#8B6914',tagBg:'#FEF3C7',tag:'REMIX STUDIO',
+     title:'Remix My Dish',desc:'Have a dish already? Let the AI improve it, upgrade the plating, transform the leftovers, or find substitutes.',
+     cta:'Start remixing →',ctaC:'#8B6914',isNew:true},
+  ];
+
+  const grid=h('div',{class:'modes-grid'});
+  modes.forEach(m=>{
+    const card=h('div',{class:'card card-hover mode-card '+m.cls,onclick:()=>go(m.id)});
+    if(m.isNew)card.appendChild(h('div',{class:'mode-new-badge'},'NEW'));
+    card.appendChild(h('span',{class:'mode-card-icon'},m.icon));
+    card.appendChild(h('div',{class:'mode-card-tag',style:`background:${m.tagBg};color:${m.tagC}`},m.tag));
+    card.appendChild(h('div',{class:'mode-card-title'},m.title));
+    card.appendChild(h('div',{class:'mode-card-desc'},m.desc));
+    card.appendChild(h('div',{class:'mode-card-cta',style:`color:${m.ctaC}`},m.cta,' →'));
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+
+  const feats=[
+    ['⏱️','Live Step Timers','Every cooking step has a built-in countdown. Never overcook again.'],
+    ['👨‍🍳','Ask Chef AI','Stuck mid-cook? Ask anything. Get real answers in seconds.'],
+    ['🧪','Smart Substitutes','Missing an ingredient? The AI finds a clever swap.'],
+    ['🏅','Chef Badges','Earn XP and badges as you cook more and level up.'],
+  ];
+  const featGrid=h('div',{class:'features-row'});
+  feats.forEach(([icon,t,d])=>{
+    featGrid.appendChild(h('div',{class:'feature-mini card'},
+      h('div',{class:'feature-mini-icon'},icon),
+      h('h4',{},t),h('p',{},d)
+    ));
+  });
+  wrap.appendChild(featGrid);
+  return wrap;
+}
+
+/* ═══════════════════════ SCAN ═══════════════════════ */
+function renderScan(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:620px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:6px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('home')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},"Let's see what you're working with"));
+  wrap.appendChild(hdr);
+  wrap.appendChild(h('p',{style:'color:var(--muted);margin-bottom:28px;padding-left:36px'},'Drop a fridge photo — AI will identify everything it spots, including that mystery sauce in the back.'));
+
+  const dz=h('div',{class:'drop-zone',id:'drop-zone'});
+  const fi=h('input',{type:'file',accept:'image/*',style:'display:none',id:'file-input'});
+  dz.appendChild(h('div',{},h('div',{class:'drop-icon'},'📷'),h('div',{style:'font-size:17px;font-weight:500;margin-bottom:6px'},'Drop your fridge photo here'),h('div',{style:'font-size:13px;color:var(--muted)'},'or click to browse · JPG, PNG, HEIC')));
+  dz.appendChild(fi);
+  dz.onclick=()=>{if(!dz.classList.contains('has-image'))fi.click()};
+  dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
+  dz.ondragleave=()=>dz.classList.remove('drag');
+  dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');handleScanFile(e.dataTransfer.files[0],dz)};
+  fi.onchange=e=>handleScanFile(e.target.files[0],dz);
+  wrap.appendChild(dz);
+  wrap.appendChild(h('div',{class:'tip-box'},'💡 ',h('strong',{},'Pro tip:'),' Pull out everything — condiments, sauces, half-used ingredients. The AI is good at creative combinations.'));
+  wrap.appendChild(h('div',{style:'text-align:center'},
+    h('button',{style:'background:none;border:1px solid var(--border);padding:9px 20px;border-radius:20px;font-size:13px;color:var(--muted);cursor:pointer',onclick:()=>{
+      S.ingredients=['eggs','butter','garlic','pasta','cherry tomatoes','olive oil','parmesan','spinach','onion','canned beans'];
+      toast('Loaded sample pantry');go('ingredients');
+    }},'Try with a sample pantry →')
+  ));
+  return wrap;
+}
+async function handleScanFile(file,dz){
+  if(!file||!file.type.startsWith('image/')){toast('Please upload an image file','error');return}
+  const url=URL.createObjectURL(file);
+  dz.innerHTML='<div class="spinner-wrap"><div class="spinner"></div><p class="spinner-msg">Scanning your fridge...<br>Spotting every ingredient I can find.</p></div>';
+  dz.classList.add('has-image');S.ingredientPhoto=file;
+  try{
+    const{base64,mediaType}=await fileToBase64(file);
+    const items=await detectIngredients(base64,mediaType);
+    S.ingredients=items.length?items:[];
+    toast(items.length?'✓ Found '+items.length+' ingredients!':'Nothing detected — add manually','');
+  }catch(err){
+    S.ingredients=[];
+    toast(err.message.includes('401')||err.message.includes('fetch')?'⚠️ Add API key for photo scanning':'Scan failed — add ingredients manually','error');
+  }
+  go('ingredients');
+}
+
+/* ═══════════════════════ VIBE MODE ═══════════════════════ */
+function renderVibe(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:720px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:6px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('home')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},'What\'s the vibe today?'));
+  wrap.appendChild(hdr);
+  wrap.appendChild(h('p',{style:'color:var(--muted);margin-bottom:28px;padding-left:36px'},'Pick a mood and the AI will design recipes that match — not just in taste, but in energy, effort, and feeling.'));
+
+  const grid=h('div',{class:'vibe-grid',id:'vibe-grid'});
+  VIBES.forEach(v=>{
+    const card=h('div',{class:'vibe-card'+(S.selectedVibe?.id===v.id?' selected':''),
+      style:`background:${v.color};border-color:${S.selectedVibe?.id===v.id?'var(--primary)':v.border}`,
+      onclick:()=>{S.selectedVibe=v;render()}});
+    card.appendChild(h('span',{class:'vibe-card-emoji'},v.emoji));
+    card.appendChild(h('div',{class:'vibe-card-name'},v.name));
+    card.appendChild(h('div',{class:'vibe-card-desc'},v.desc));
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+
+  if(S.selectedVibe){
+    const selected=h('div',{class:'card fade-up',style:'padding:18px 22px;margin-bottom:20px;border-color:var(--primary);background:var(--primary-light)'},
+      h('div',{style:'display:flex;align-items:center;gap:10px'},
+        h('span',{style:'font-size:24px'},S.selectedVibe.emoji),
+        h('div',{},
+          h('div',{style:'font-size:14px;font-weight:700;color:var(--primary)'},'Vibe locked in: '+S.selectedVibe.name),
+          h('div',{style:'font-size:13px;color:var(--muted)'},S.selectedVibe.desc)
+        )
+      )
+    );
+    wrap.appendChild(selected);
+    wrap.appendChild(h('div',{style:'display:flex;gap:12px'},
+      h('button',{class:'btn btn-primary',style:'flex:1;justify-content:center',onclick:()=>{go('scan')}},
+        '📷 Scan my fridge first'),
+      h('button',{class:'btn btn-ghost',style:'flex:1;justify-content:center',onclick:()=>{
+        S.ingredients=['eggs','pasta','garlic','olive oil','parmesan','cherry tomatoes','spinach','onion'];
+        go('ingredients');
+      }},'Use sample ingredients →')
+    ));
+  }
+  return wrap;
+}
+
+/* ═══════════════════════ MYSTERY BASKET ═══════════════════════ */
+/* ═══════════════════════ MYSTERY BASKET ═══════════════════════ */
+function renderMystery(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:700px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:20px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('home')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},'Mystery Basket'));
+  wrap.appendChild(hdr);
+
+  // Sub-mode tabs
+  const subTabs=h('div',{style:'display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap'});
+  [{id:'classic',icon:'🎲',label:'Mystery Roll'},{id:'upload',icon:'📷',label:'You Decide'},{id:'daily',icon:'📅',label:"Today's Dish"}].forEach(t=>{
+    subTabs.appendChild(h('button',{
+      style:`padding:10px 18px;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:2px solid ${S.mysterySubMode===t.id?'var(--primary)':'var(--border)'};background:${S.mysterySubMode===t.id?'var(--primary-light)':'var(--surface)'};color:${S.mysterySubMode===t.id?'var(--primary)':'var(--muted)'}`,
+      onclick:()=>{S.mysterySubMode=t.id;render()}
+    },t.icon+' '+t.label));
+  });
+  wrap.appendChild(subTabs);
+
+  if(S.mysterySubMode==='classic') renderMysteryClassic(wrap);
+  else if(S.mysterySubMode==='upload') renderMysteryUpload(wrap);
+  else if(S.mysterySubMode==='daily') renderMysteryDaily(wrap);
+  return wrap;
+}
+
+function renderMysteryClassic(wrap){
+  const basket=h('div',{class:'basket-wrap'});
+  basket.appendChild(h('div',{class:'basket-title'},'🎲 Your Mystery Basket'));
+  basket.appendChild(h('div',{class:'basket-sub'},'The AI drops 6 surprise ingredients. Your challenge: make something worth eating. This is where creativity really happens.'));
+  if(!S.mysteryIngredients.length){
+    basket.appendChild(h('button',{class:'basket-roll-btn',onclick:rollBasket},'🎲 Roll the basket'));
+  }else{
+    const ingWrap=h('div',{class:'basket-ingredients'});
+    S.mysteryIngredients.forEach(ing=>{
+      ingWrap.appendChild(h('div',{class:'basket-ing'},h('span',{class:'basket-ing-emoji'},ing.emoji),ing.name));
+    });
+    basket.appendChild(ingWrap);
+    basket.appendChild(h('div',{style:'display:flex;gap:10px;flex-wrap:wrap'},
+      h('button',{class:'basket-roll-btn',onclick:rollBasket},'🎲 Reroll'),
+      h('button',{class:'basket-roll-btn',style:'background:rgba(255,255,255,.25)',onclick:generateMysteryChallenge},'✨ Generate challenge')
+    ));
+    if(S.mysteryChallenge){
+      const box=h('div',{class:'basket-challenge-box'});
+      box.appendChild(h('div',{class:'basket-challenge-label'},'🏆 Your Challenge'));
+      box.appendChild(h('div',{class:'basket-challenge-text'},S.mysteryChallenge));
+      basket.appendChild(box);
+    }
+  }
+  wrap.appendChild(basket);
+  if(S.mysteryIngredients.length&&S.mysteryChallenge){
+    wrap.appendChild(h('button',{class:'btn btn-primary',style:'width:100%;justify-content:center;font-size:16px;padding:14px;border-radius:30px;margin-top:10px',onclick:()=>{
+      S.ingredients=S.mysteryIngredients.map(i=>i.name);S.selectedStyle=null;go('style');
+    }},'Accept the Challenge → Get Recipes'));
+  }
+}
+
+function renderMysteryUpload(wrap){
+  // Intro
+  wrap.appendChild(h('div',{class:'card',style:'padding:20px 22px;margin-bottom:20px;background:linear-gradient(135deg,#F0F4FF,#E8F0FB);border-color:#90B8E8'},
+    h('div',{style:'font-size:22px;margin-bottom:8px'},'🎰 Can\'t Decide? Let the AI Decide for You.'),
+    h('div',{style:'font-size:14px;color:var(--muted);line-height:1.65'},'Upload a photo of your fridge or pantry — or type what you have — and the AI will roll the dice and tell you exactly what to make. No deliberating. Just cook.')
+  ));
+
+  // Upload zone
+  const uz=h('div',{
+    style:'border:2px dashed var(--border-strong);border-radius:var(--radius-lg);min-height:140px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--surface);overflow:hidden;margin-bottom:12px;transition:all .2s;text-align:center;padding:16px',
+    onclick:()=>document.getElementById('mystery-upload-input').click()
+  });
+  const mfi=h('input',{type:'file',accept:'image/*',style:'display:none',id:'mystery-upload-input'});
+  mfi.onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    const url=URL.createObjectURL(file);
+    uz.innerHTML='';uz.appendChild(h('img',{src:url,style:'max-height:200px;object-fit:contain'}));uz.appendChild(mfi);
+    const {base64,mediaType}=await fileToBase64(file);
+    toast('Scanning your fridge...','info');
+    try{
+      const items=await detectIngredients(base64,mediaType);
+      S.mysteryUserIngredients=items;
+      toast('Found '+items.length+' ingredients — type anything else to add','success');
+      render();
+    }catch{toast('Add ingredients manually below','');}
+  };
+  uz.appendChild(h('div',{},h('div',{style:'font-size:32px;margin-bottom:8px'},'📷'),h('div',{style:'font-size:15px;font-weight:500;margin-bottom:4px'},'Upload your fridge / pantry photo'),h('div',{style:'font-size:12px;color:var(--muted)'},'AI will scan what you have')));
+  uz.appendChild(mfi);
+  wrap.appendChild(uz);
+
+  // Manual add
+  const addRow=h('div',{class:'add-row',style:'margin-bottom:12px'});
+  const addInput=h('input',{class:'add-input',type:'text',placeholder:'Or type an ingredient and press Enter...',id:'mystery-add-input',onkeydown:e=>{
+    if(e.key==='Enter'&&e.target.value.trim()){
+      const v=e.target.value.trim();
+      if(!S.mysteryUserIngredients.map(i=>i.toLowerCase()).includes(v.toLowerCase()))S.mysteryUserIngredients.push(v);
+      e.target.value='';render();
+    }
+  }});
+  addRow.appendChild(addInput);
+  wrap.appendChild(addRow);
+
+  // Show current ingredients as chips
+  if(S.mysteryUserIngredients.length){
+    const chips=h('div',{style:'display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px'});
+    S.mysteryUserIngredients.forEach(ing=>{
+      chips.appendChild(h('span',{style:'background:var(--primary-light);color:var(--primary);padding:5px 11px;border-radius:16px;font-size:13px;font-weight:500'},ing));
+    });
+    wrap.appendChild(chips);
+  }
+
+  // Roll dice button
+  const rollBtn=h('button',{
+    class:'btn btn-dark',
+    style:'width:100%;justify-content:center;font-size:16px;padding:14px;border-radius:30px;margin-bottom:16px',
+    disabled:!S.mysteryUserIngredients.length||S.mysteryLoading,
+    onclick:rollDiceDecision
+  },S.mysteryLoading?'Rolling...':'🎰 Roll the Dice — Tell Me What to Cook');
+  if(!S.mysteryUserIngredients.length)rollBtn.disabled=true;
+  wrap.appendChild(rollBtn);
+
+  // Decision result
+  if(S.mysteryDecision){
+    const dc=S.mysteryDecision;
+    const card=h('div',{class:'card pop',style:'overflow:hidden'});
+    const dcHead=h('div',{style:'background:var(--primary);padding:18px 22px;display:flex;align-items:center;gap:14px'});
+    dcHead.appendChild(h('span',{style:'font-size:46px'},dc.emoji||'🍽️'));
+    dcHead.appendChild(h('div',{},
+      h('div',{style:'color:#fff;font-family:Georgia,serif;font-size:22px;margin-bottom:4px'},dc.dish),
+      h('div',{style:'color:rgba(255,255,255,.8);font-size:13px'},dc.time+' · '+dc.difficulty)
+    ));
+    card.appendChild(dcHead);
+    const dcBody=h('div',{style:'padding:18px 22px'});
+    dcBody.appendChild(h('div',{style:'font-size:17px;font-weight:600;color:var(--primary);line-height:1.55;margin-bottom:12px'},'"'+dc.decision+'"'));
+    dcBody.appendChild(h('div',{style:'background:var(--amber-light);border:1px solid var(--amber-border);border-radius:8px;padding:11px 14px;font-size:13.5px;color:#7a5f00;margin-bottom:16px'},'👨‍🍳 '+dc.topTip));
+    const cookBtn=h('button',{class:'btn btn-primary',style:'width:100%;justify-content:center;font-size:15px',onclick:()=>{
+      S.selectedRecipe={name:dc.dish,emoji:dc.emoji||'🍽️',difficulty:dc.difficulty,time:dc.time,steps:dc.steps||[],tip:dc.topTip};
+      S.cookStep=0;S.cookCompleted=new Set();S.cookDone=false;S.timerSec=null;S.timerRunning=false;
+      S.chefMsgs=[{role:'ai',text:'Ready to cook '+dc.dish+'! Ask me anything as we go.'}];
+      go('cooking');
+    }},'👨‍🍳 Cook This Now →');
+    dcBody.appendChild(cookBtn);
+    card.appendChild(dcBody);
+    wrap.appendChild(card);
+  }
+}
+
+function renderMysteryDaily(wrap){
+  // Today's date label
+  const today=new Date();
+  const dayStr=today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  wrap.appendChild(h('div',{style:'text-align:center;margin-bottom:20px'},
+    h('div',{style:'font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px'},'Today\'s Featured Recipe'),
+    h('div',{style:'font-size:20px;font-weight:700;color:var(--text)'},dayStr)
+  ));
+
+  if(!S.mysteryDailyRecipe&&!S.mysteryLoading){
+    const loadCard=h('div',{class:'card',style:'padding:32px;text-align:center'});
+    loadCard.appendChild(h('div',{style:'font-size:48px;margin-bottom:14px'},'📅'));
+    loadCard.appendChild(h('h3',{style:'font-size:20px;margin-bottom:8px'},'One recipe, every day.'));
+    loadCard.appendChild(h('p',{style:'color:var(--muted);font-size:14px;line-height:1.65;margin-bottom:20px'},"Every day CookLens features one curated dish from a specific world cuisine — built from basic pantry staples. Same dish all day. Come back tomorrow for a new one."));
+    loadCard.appendChild(h('button',{class:'btn btn-primary',style:'justify-content:center',onclick:loadDailyRecipe},"📅 Load Today's Recipe"));
+    wrap.appendChild(loadCard);
+  } else if(S.mysteryLoading){
+    wrap.appendChild(h('div',{class:'spinner-wrap'},h('div',{class:'spinner'}),h('p',{class:'spinner-msg'},'Generating today\'s featured dish...')));
+  } else if(S.mysteryDailyRecipe){
+    const dr=S.mysteryDailyRecipe;
+    const card=h('div',{class:'card pop',style:'overflow:hidden'});
+    // Header gradient
+    const hd=h('div',{style:'background:linear-gradient(135deg,#1A1208,#3D2510);padding:28px 24px;color:#fff'});
+    hd.appendChild(h('div',{style:'font-size:56px;margin-bottom:10px'},dr.emoji||'🍽️'));
+    hd.appendChild(h('div',{style:'font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary-mid);margin-bottom:6px'},(dr.cuisine||'World Cuisine')+' · '+(dr.technique||'Classic')));
+    hd.appendChild(h('div',{style:'font-family:Georgia,serif;font-size:26px;font-weight:700;margin-bottom:8px'},dr.name));
+    hd.appendChild(h('div',{style:'font-size:15px;color:rgba(255,255,255,.8);line-height:1.6;font-style:italic'},dr.tagline||dr.description||''));
+    card.appendChild(hd);
+    const bd=h('div',{style:'padding:20px 24px'});
+    if(dr.story){
+      bd.appendChild(h('p',{style:'font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px;padding:14px 16px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--primary)'},dr.story));
+    }
+    const meta=h('div',{style:'display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap'});
+    meta.appendChild(h('span',{style:'background:var(--green-light);color:var(--green);font-size:12px;font-weight:600;padding:4px 11px;border-radius:10px'},dr.difficulty||'Easy'));
+    meta.appendChild(h('span',{style:'background:var(--surface2);color:var(--muted);font-size:12px;font-weight:600;padding:4px 11px;border-radius:10px'},'⏱ '+dr.time||'30 min'));
+    bd.appendChild(meta);
+    if(dr.tip){
+      bd.appendChild(h('div',{style:'background:var(--amber-light);border:1px solid var(--amber-border);border-radius:8px;padding:11px 14px;font-size:13.5px;color:#7a5f00;margin-bottom:16px'},'👨‍🍳 ',h('strong',{},"Chef's tip: "),dr.tip));
+    }
+    bd.appendChild(h('button',{class:'btn btn-primary',style:'width:100%;justify-content:center;font-size:15px',onclick:()=>{
+      S.selectedRecipe={name:dr.name,emoji:dr.emoji||'🍽️',difficulty:dr.difficulty||'Easy',time:dr.time||'30 min',steps:dr.steps||[],tip:dr.tip||''};
+      S.cookStep=0;S.cookCompleted=new Set();S.cookDone=false;S.timerSec=null;S.timerRunning=false;
+      S.chefMsgs=[{role:'ai',text:"Today's dish is "+dr.name+"! This one comes from "+dr.cuisine+" cuisine. Ask me anything as we cook."}];
+      go('cooking');
+    }},'👨‍🍳 Cook Today\'s Dish'));
+    card.appendChild(bd);
+    wrap.appendChild(card);
+    wrap.appendChild(h('p',{style:'text-align:center;font-size:12px;color:var(--light);margin-top:10px'},'This dish refreshes daily at midnight. Same recipe for everyone today.'));
+  }
+}
+
+function rollBasket(){
+  const pool=[...MYSTERY_INGREDIENT_POOL];
+  const picked=[];
+  while(picked.length<6&&pool.length){const idx=Math.floor(Math.random()*pool.length);picked.push(pool.splice(idx,1)[0]);}
+  S.mysteryIngredients=picked;S.mysteryChallenge='';render();toast('🎲 New basket rolled!');
+}
+async function generateMysteryChallenge(){
+  if(!S.mysteryIngredients.length)return;
+  toast('AI is crafting your challenge...','info');
+  try{
+    const result=await getMysteryChallenge(S.mysteryIngredients);
+    S.mysteryChallenge=result.challenge+' Dish: '+result.name+'.'+(result.why?' '+result.why:'');
+    toast('🏆 Challenge ready!','success');
+  }catch{
+    S.mysteryChallenge='Challenge: Use at least 4 of these ingredients to create a dish that looks intentional — not accidental. Harmony is the goal.';
+  }
+  render();
+}
+async function rollDiceDecision(){
+  if(!S.mysteryUserIngredients.length){toast('Add some ingredients first','error');return}
+  S.mysteryLoading=true;S.mysteryDecision=null;render();
+  try{
+    S.mysteryDecision=await getMysteryDecision(S.mysteryUserIngredients);
+    toast('🎰 The dice have spoken!','success');
+  }catch{
+    S.mysteryDecision={dish:'Garlic Butter Pasta',emoji:'🍝',decision:'Stop overthinking. You have pasta and garlic — that\'s a complete meal. Make it tonight.',difficulty:'Easy',time:'20 min',topTip:'Golden garlic in butter + pasta water = silky sauce. It takes 20 minutes and impresses everyone.',steps:[{text:'Boil salted water and cook pasta al dente.',duration:9},{text:'Brown garlic in butter until golden.',duration:4},{text:'Toss pasta with garlic butter and pasta water.',duration:3},{text:'Season, plate, and eat immediately.',duration:2}]};
+  }
+  S.mysteryLoading=false;render();
+}
+async function loadDailyRecipe(){
+  S.mysteryLoading=true;render();
+  try{
+    S.mysteryDailyRecipe=await generateDailyRecipe();
+    toast("📅 Today's dish is ready!",'success');
+  }catch{
+    S.mysteryDailyRecipe={name:'Aglio e Olio',emoji:'🍝',cuisine:'Italian',technique:'Emulsified sauce',tagline:'The ultimate pantry pasta — four ingredients, infinite elegance.',story:'Born in Naples from nothing but pasta, garlic, oil, and pepper. A dish that proves simplicity is a philosophy.',difficulty:'Easy',time:'20 min',steps:[{text:'Boil heavily salted pasta water.',duration:8},{text:'Thinly slice 6 garlic cloves. Warm in 4 tbsp olive oil over the lowest heat — they should sizzle gently, never spit.',duration:6},{text:'Add chili flakes. Cook 30 seconds.',duration:1},{text:'Add pasta + splash of pasta water. Toss until emulsified and glossy.',duration:3},{text:'Finish with parsley and parmesan. Serve immediately.',duration:1}],tip:'The garlic goes in cold oil. If the oil is already hot when garlic touches it, you\'ve already lost.'};
+  }
+  S.mysteryLoading=false;render();
+}
+
+/* ═══════════════════════ REMIX ═══════════════════════ */
+function renderRemix(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:700px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:6px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('home')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},'Remix My Dish'));
+  wrap.appendChild(hdr);
+  wrap.appendChild(h('p',{style:'color:var(--muted);margin-bottom:22px;padding-left:36px'},"Have a dish? Upload a photo, describe it, pick a remix mode — the AI sees what you've made and gives you specific, visual feedback."));
+
+  const tabs=h('div',{class:'remix-mode-tabs'});
+  [{id:'improve',icon:'⬆️',label:'Improve It'},{id:'plating',icon:'🎨',label:'Plate It Better'},{id:'leftover',icon:'♻️',label:'Leftover Alchemy'},{id:'substitute',icon:'🔄',label:'Find Substitutes'}].forEach(t=>{
+    tabs.appendChild(h('button',{class:'remix-tab'+(S.remixMode===t.id?' active':''),onclick:()=>{S.remixMode=t.id;S.remixResult=null;render()}},t.icon+' '+t.label));
+  });
+  wrap.appendChild(tabs);
+
+  // Photo upload section
+  const photoSection=h('div',{class:'card',style:'padding:18px 20px;margin-bottom:14px'});
+  photoSection.appendChild(h('div',{style:'font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px'},'📸 Photo of your dish ',h('span',{style:'font-weight:400;text-transform:none;letter-spacing:0'},'(optional — AI gives visual feedback if you do)')));
+
+  const photoUploadZone=h('div',{
+    style:`border:2px dashed ${S.remixPhotoPreview?'var(--primary)':'var(--border-strong)'};border-radius:var(--radius);min-height:120px;display:flex;align-items:center;justify-content:center;cursor:${S.remixPhotoPreview?'default':'pointer'};background:var(--bg);overflow:hidden;transition:all .2s;margin-bottom:0`,
+    onclick:()=>{ if(!S.remixPhotoPreview) document.getElementById('remix-photo-input').click(); }
+  });
+  const remixPhotoFile=h('input',{type:'file',accept:'image/*',style:'display:none',id:'remix-photo-input'});
+  remixPhotoFile.onchange=async e=>{
+    const file=e.target.files[0]; if(!file) return;
+    S.remixPhotoPreview=URL.createObjectURL(file);
+    const {base64,mediaType}=await fileToBase64(file);
+    S.remixPhotoBase64=base64; S.remixPhotoMediaType=mediaType;
+    toast('Photo added — AI will analyse it visually','success'); render();
+  };
+  if(S.remixPhotoPreview){
+    photoUploadZone.appendChild(h('img',{src:S.remixPhotoPreview,style:'width:100%;max-height:200px;object-fit:cover;display:block'}));
+    photoUploadZone.appendChild(remixPhotoFile);
+    // Clear photo button
+    const clearBtn=h('button',{style:'position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2',onclick:e=>{e.stopPropagation();S.remixPhotoPreview=null;S.remixPhotoBase64=null;S.remixPhotoMediaType=null;render()}},'×');
+    photoUploadZone.style.position='relative';
+    photoUploadZone.appendChild(clearBtn);
+  } else {
+    photoUploadZone.appendChild(h('div',{style:'text-align:center;padding:20px'},
+      h('div',{style:'font-size:32px;margin-bottom:8px'},'📷'),
+      h('div',{style:'font-size:14px;font-weight:500;margin-bottom:3px'},'Upload a photo'),
+      h('div',{style:'font-size:12px;color:var(--muted)'},'The AI will look at it and give you visual, specific feedback')
+    ));
+    photoUploadZone.appendChild(remixPhotoFile);
+  }
+  photoSection.appendChild(photoUploadZone);
+  wrap.appendChild(photoSection);
+
+  // Text input + mode-specific placeholder
+  const placeholders={
+    improve:'e.g. "Pasta with garlic and olive oil" — what did you make?',
+    plating:'e.g. "Shakshuka with eggs and tomatoes" — what needs a visual upgrade?',
+    leftover:'e.g. "Roast chicken with leftover potatoes" — what\'s in your fridge?',
+    substitute:'e.g. "Carbonara but I\'m out of guanciale and eggs" — what are you missing?'
+  };
+  const inputArea=h('div',{class:'remix-input-area'});
+  const textarea=h('textarea',{
+    class:'remix-textarea',id:'remix-input',
+    placeholder:placeholders[S.remixMode]||'Describe your dish or situation...',
+    style:'min-height:90px'
+  });
+  textarea.value=S.remixInput;
+  textarea.oninput=e=>{S.remixInput=e.target.value};
+  inputArea.appendChild(textarea);
+  wrap.appendChild(inputArea);
+
+  const btnRow=h('div',{style:'display:flex;gap:10px;margin-bottom:24px'});
+  btnRow.appendChild(h('button',{class:'btn btn-primary',style:'flex:1;justify-content:center',disabled:S.remixLoading,onclick:runRemix},
+    S.remixLoading?'Analysing...':S.remixPhotoBase64?'🔍 Remix with Photo Analysis':'✨ Remix it'));
+  btnRow.appendChild(h('button',{class:'btn btn-ghost',onclick:()=>{S.remixInput='';S.remixResult=null;S.remixPhotoPreview=null;S.remixPhotoBase64=null;S.remixPhotoMediaType=null;render()}},'Clear all'));
+  wrap.appendChild(btnRow);
+
+  if(S.remixLoading){
+    wrap.appendChild(h('div',{class:'spinner-wrap'},
+      h('div',{class:'spinner'}),
+      h('p',{class:'spinner-msg'},S.remixPhotoBase64?'Analysing your photo and crafting specific feedback...':'The AI is thinking up something creative...')
+    ));
+    return wrap;
+  }
+
+  if(S.remixResult){
+    const rc=h('div',{class:'card remix-result-card pop'});
+    const rh=h('div',{class:'remix-result-head',style:`background:${S.remixResult.color||'var(--primary)'}`});
+    if(S.remixPhotoBase64)rh.appendChild(h('span',{style:'color:rgba(255,255,255,.7);font-size:12px;margin-right:8px'},'📸 Based on your photo'));
+    rh.appendChild(h('span',{style:'color:#fff;font-family:Georgia,serif;font-size:17px'},S.remixResult.title||'Your Remix'));
+    rc.appendChild(rh);
+    const rb=h('div',{class:'remix-result-body'});
+    (S.remixResult.items||[]).forEach((item,i)=>{
+      const row=h('div',{class:'remix-item'});
+      const num=h('div',{class:'remix-item-num',style:`background:${S.remixResult.color||'var(--primary)'};min-width:28px;height:28px`},String(i+1));
+      row.appendChild(num); row.appendChild(h('div',{class:'remix-item-text'},item));
+      rb.appendChild(row);
+    });
+    rc.appendChild(rb);
+    wrap.appendChild(rc);
+    wrap.appendChild(h('button',{class:'btn btn-ghost',style:'margin-top:12px',onclick:()=>go('scan')},'📷 Cook something new →'));
+  }
+  return wrap;
+}
+async function runRemix(){
+  const inp=document.getElementById('remix-input');
+  S.remixInput=inp?.value?.trim()||S.remixInput;
+  if(!S.remixInput){toast('Describe the dish first','error');return}
+  S.remixLoading=true;S.remixResult=null;render();
+  try{
+    S.remixResult=await getRemixSuggestions(S.remixInput,S.remixMode,S.remixPhotoBase64,S.remixPhotoMediaType);
+    toast('✨ Remix ready!','success');
+  }catch{
+    const fallbacks={
+      improve:{title:'Upgrade Path',color:'#C4522A',items:['Add acid at the end — a squeeze of lemon or splash of vinegar lifts almost any dish','Toast your spices dry in the pan for 60 seconds before adding liquid — dramatic difference','Rest meat for half its cooking time before cutting','Season the cooking water or oil generously — it matters more than the finishing salt']},
+      plating:{title:'Plating Glow-Up',color:'#6B3FA0',items:['Use a ring mold or ramekin to create height — stack, don\'t spread','Dot sauce with a spoon rather than pouring, then drag for a smear effect','Add a contrasting color garnish — green herb oil or a bright raw element','Clean the plate rim with a damp cloth before serving']},
+      leftover:{title:'Leftover Alchemy',color:'#2D5016',items:['Chop leftovers finely and fold into scrambled eggs or an omelette','Toss with pasta water and parmesan for a fridge-clearing pasta','Press flat and pan-fry for crispy cakes or fritters','Use as a grain bowl base with fresh raw toppings for contrast']},
+      substitute:{title:'Smart Swaps',color:'#1E5FA8',items:['No cream → coconut milk at a 1:1 ratio, especially for curries','No wine → equal parts stock + 1 tsp vinegar or lemon','No fresh herbs → use 1/3 the amount dried and add at the start not end','No butter → equal parts olive oil for cooking, tahini for richness in sauces']},
+    };
+    S.remixResult=fallbacks[S.remixMode]||fallbacks.improve;
+  }
+  S.remixLoading=false;render();
+}
+
+/* ═══════════════════════ INGREDIENTS ═══════════════════════ */
+function renderIngredients(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:680px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:6px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('scan')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},'Your Ingredients'));
+  wrap.appendChild(hdr);
+  wrap.appendChild(h('p',{style:'color:var(--muted);margin-bottom:26px;padding-left:36px'},'Review what was found, add anything the camera missed, and set any dietary needs.'));
+
+  if(S.selectedVibe){
+    wrap.appendChild(h('div',{style:'background:var(--purple-light);border:1.5px solid #C4A8E0;border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px'},
+      h('span',{style:'font-size:20px'},S.selectedVibe.emoji),
+      h('div',{},h('div',{style:'font-size:13px;font-weight:700;color:var(--purple)'},'Vibe mode: '+S.selectedVibe.name),h('div',{style:'font-size:12px;color:var(--muted)'},'Recipes will be shaped around this feeling'))
+    ));
+  }
+
+  const ingCard=h('div',{class:'card ing-card'});
+  ingCard.appendChild(h('div',{class:'ing-label'},'Ingredients ',h('span',{},'Click any chip to remove')));
+  const chips=h('div',{class:'chips',id:'chips-wrap'});
+  renderChips(chips);ingCard.appendChild(chips);
+  const addRow=h('div',{class:'add-row'});
+  const addInput=h('input',{class:'add-input',type:'text',placeholder:'Add an ingredient...',id:'add-input',onkeydown:e=>{if(e.key==='Enter')addIngredient()}});
+  addRow.appendChild(addInput);addRow.appendChild(h('button',{class:'btn btn-primary',style:'padding:9px 18px;border-radius:8px;font-size:14px',onclick:addIngredient},'+ Add'));
+  ingCard.appendChild(addRow);wrap.appendChild(ingCard);
+
+  const dietCard=h('div',{class:'card ing-card'});
+  dietCard.appendChild(h('div',{class:'ing-label'},'Dietary Preferences ',h('span',{},'(optional)')));
+  const dc=h('div',{class:'diet-chips',id:'diet-chips'});
+  renderDietChips(dc);dietCard.appendChild(dc);wrap.appendChild(dietCard);
+
+  const stats=h('div',{class:'stats-row'});
+  [[S.ingredients.length+'','ingredients'],[S.dietPrefs.length+'','filters'],[S.selectedVibe?'✓':'—','vibe']].forEach(([n,l])=>{
+    stats.appendChild(h('div',{class:'stat-box'},h('div',{class:'stat-n'},n),h('div',{class:'stat-l'},l)));
+  });
+  wrap.appendChild(stats);
+
+  const findBtn=h('button',{class:'btn btn-primary',id:'find-btn',
+    style:'width:100%;justify-content:center;font-size:17px;padding:15px 0;border-radius:30px',
+    onclick:()=>go('style')
+  },'Choose a cooking style →');
+  if(!S.ingredients.length)findBtn.disabled=true;
+  wrap.appendChild(findBtn);
+  return wrap;
+}
+function renderChips(c){
+  c.innerHTML='';
+  if(!S.ingredients.length){c.innerHTML='<span style="color:var(--light);font-size:14px">No ingredients yet — add some below.</span>';return}
+  S.ingredients.forEach(item=>{
+    c.appendChild(h('button',{class:'chip',title:'Click to remove',onclick:()=>{
+      S.ingredients=S.ingredients.filter(i=>i!==item);toast('Removed "'+item+'"');
+      const wrap=document.getElementById('chips-wrap');if(wrap)renderChips(wrap);
+    }},item,h('span',{class:'chip-x'},'×')));
+  });
+}
+function renderDietChips(c){
+  c.innerHTML='';
+  DIET_OPTIONS.forEach(p=>{
+    const on=S.dietPrefs.includes(p);
+    c.appendChild(h('button',{class:'diet-chip'+(on?' on':''),onclick:()=>{
+      S.dietPrefs=S.dietPrefs.includes(p)?S.dietPrefs.filter(x=>x!==p):[...S.dietPrefs,p];
+      const dc=document.getElementById('diet-chips');if(dc)renderDietChips(dc);
+    }},on?'✓ '+p:p));
+  });
+}
+function addIngredient(){
+  const inp=document.getElementById('add-input');if(!inp)return;
+  const v=inp.value.trim().toLowerCase();
+  if(v&&!S.ingredients.map(i=>i.toLowerCase()).includes(v)){
+    S.ingredients.push(inp.value.trim());inp.value='';
+    toast('Added "'+S.ingredients[S.ingredients.length-1]+'"','success');
+    const c=document.getElementById('chips-wrap');if(c)renderChips(c);
+    const btn=document.getElementById('find-btn');if(btn)btn.disabled=!S.ingredients.length;
+  }
+}
+
+/* ═══════════════════════ STYLE PICKER ═══════════════════════ */
+function renderStylePicker(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:780px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:6px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('ingredients')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},'How do you want to cook today?'));
+  wrap.appendChild(hdr);
+  wrap.appendChild(h('p',{style:'color:var(--muted);margin-bottom:24px;padding-left:36px'},'Pick a personality for your recipes. The AI will shape everything — ingredients, technique, presentation — around this.'));
+
+  const grid=h('div',{class:'style-grid',id:'style-grid'});
+  RECIPE_STYLES.forEach(style=>{
+    const card=h('div',{class:'style-card'+(S.selectedStyle?.id===style.id?' selected':''),
+      style:`background:${style.bg}`,onclick:()=>{S.selectedStyle=style;render()}});
+    card.appendChild(h('div',{class:'style-card-emoji'},style.emoji));
+    card.appendChild(h('div',{class:'style-card-name'},style.name));
+    card.appendChild(h('div',{class:'style-card-desc'},style.desc));
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+
+  const cont=h('button',{class:'btn btn-primary',style:'width:100%;justify-content:center;font-size:17px;padding:15px 0;border-radius:30px;margin-top:8px',onclick:generateRecipesFromState},
+    S.selectedStyle?'Cook '+S.selectedStyle.emoji+' '+S.selectedStyle.name+' →':'Skip — just show me recipes →');
+  wrap.appendChild(cont);
+  return wrap;
+}
+async function generateRecipesFromState(){
+  const btn=document.querySelector('[onclick="generateRecipesFromState()"]');
+  if(btn)btn.disabled=true;
+  const page=document.getElementById('page');
+  const spinner=h('div',{class:'spinner-wrap',style:'padding:60px 0'},
+    h('div',{class:'spinner'}),
+    h('p',{class:'spinner-msg'},'The AI is thinking creatively...<br>'+(S.selectedStyle?'Style: '+S.selectedStyle.name+'<br>':'')+(S.selectedVibe?'Vibe: '+S.selectedVibe.name:''))
+  );
+  page.appendChild(spinner);
+  try{
+    S.recipes=await generateRecipes(S.ingredients,S.dietPrefs,S.selectedStyle,S.selectedVibe);
+    toast('🍽️ 3 creative recipes ready!','success');
+  }catch(err){
+    S.recipes=buildFallbackRecipes(S.ingredients,S.selectedStyle,S.selectedVibe);
+    toast(err.message.includes('401')||err.message.includes('fetch')?'⚠️ Add API key for full AI — showing ingredient-matched recipes':'Smart recipes ready','');
+  }
+  go('recipes');
+}
+
+/* ═══════════════════════ RECIPES ═══════════════════════ */
+function renderRecipes(){
+  const wrap=h('div',{class:'page-section fade-up'});
+  const top=h('div',{class:'recipes-header'});
+  const titleBlock=h('div',{});
+  titleBlock.appendChild(h('h2',{style:'font-size:32px;margin-bottom:6px'},'Your Creative Recipes'));
+  const badgeRow=h('div',{style:'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px'});
+  if(S.selectedStyle)badgeRow.appendChild(h('div',{class:'style-badge-pill'},S.selectedStyle.emoji,' ',S.selectedStyle.name));
+  if(S.selectedVibe)badgeRow.appendChild(h('div',{class:'style-badge-pill',style:'background:var(--purple-light);color:var(--purple)'},S.selectedVibe.emoji,' ',S.selectedVibe.name));
+  titleBlock.appendChild(badgeRow);
+  top.appendChild(titleBlock);
+  top.appendChild(h('div',{style:'display:flex;gap:8px'},
+    h('button',{class:'btn btn-ghost',style:'font-size:13px;padding:8px 14px;border-radius:20px',onclick:()=>go('style')},'↩ Change style'),
+    h('button',{class:'btn btn-ghost',style:'font-size:13px;padding:8px 14px;border-radius:20px',onclick:()=>go('scan')},'↩ Re-scan')
+  ));
+  wrap.appendChild(top);
+
+  const filterRow=h('div',{class:'filter-row'});
+  ['All','Easy','Medium','Hard'].forEach(f=>{
+    filterRow.appendChild(h('button',{class:'filter-btn'+(S.recipeDiffFilter===f?' on':''),onclick:()=>{S.recipeDiffFilter=f;render()}},f));
+  });
+  wrap.appendChild(filterRow);
+
+  const shown=S.recipeDiffFilter==='All'?S.recipes:S.recipes.filter(r=>r.difficulty===S.recipeDiffFilter);
+  const grid=h('div',{class:'recipe-grid'});
+  if(!shown.length){
+    grid.appendChild(h('div',{style:'grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)'},h('div',{style:'font-size:40px;margin-bottom:12px'},'🤷'),h('p',{},'No '+S.recipeDiffFilter+' recipes here. Try All.')));
+  }else{
+    shown.forEach((r,i)=>{
+      const card=h('div',{class:'card card-hover recipe-card fade-up',style:'animation-delay:'+(i*.1)+'s',onclick:()=>{
+        S.selectedRecipe=r;S.cookStep=0;S.cookCompleted=new Set();S.cookDone=false;
+        S.timerSec=null;S.timerRunning=false;
+        S.chefMsgs=[{role:'ai',text:'Ready to cook '+r.name+'! Ask me anything as we go — technique questions, substitutions, timing — I\'m here for all of it.'}];
+        go('cooking');
+      }});
+      // gradient bg based on emoji
+      const gradients={'🍝':'linear-gradient(135deg,#FFF8F0,#FDF0E5)','🥚':'linear-gradient(135deg,#FFFBF0,#FFF8E8)','🍲':'linear-gradient(135deg,#F0F8FF,#E8F5E9)','🍚':'linear-gradient(135deg,#FFF9F0,#F0F8E8)','🥘':'linear-gradient(135deg,#FFF3E0,#FFF8F0)'};
+      const grad=gradients[r.emoji]||'linear-gradient(135deg,var(--primary-light),var(--amber-light))';
+      card.appendChild(h('div',{class:'recipe-emoji-bg',style:`background:${grad}`},r.emoji));
+      const body=h('div',{class:'recipe-body'});
+      const rh=h('div',{class:'recipe-head'});
+      rh.appendChild(h('h3',{class:'recipe-name'},r.name));
+      rh.appendChild(h('span',{class:'diff-badge diff-'+(r.difficulty||'Easy')},r.difficulty));
+      body.appendChild(rh);
+      if(r.technique||r.cuisine){
+        const meta=h('div',{style:'display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap'});
+        if(r.technique)meta.appendChild(h('span',{style:'font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;background:#F0F4FF;color:#1E5FA8'},r.technique));
+        if(r.cuisine)meta.appendChild(h('span',{style:'font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;background:var(--surface2);color:var(--muted)'},r.cuisine));
+        body.appendChild(meta);
+      }
+      body.appendChild(h('p',{class:'recipe-desc'},r.description));
+      if(r.why)body.appendChild(h('p',{style:'font-size:13px;color:var(--primary);font-style:italic;margin-bottom:10px'},'✨ '+r.why));
+      if(r.tags?.length){
+        const tagRow=h('div',{class:'recipe-tags'});
+        r.tags.forEach(t=>tagRow.appendChild(h('span',{class:'recipe-tag'},t)));
+        body.appendChild(tagRow);
+      }
+      body.appendChild(h('div',{class:'recipe-foot'},
+        h('span',{style:'font-size:13px;color:var(--muted)'},'⏱ '+r.time),
+        h('span',{class:'recipe-cta'},'Let\'s cook →')
+      ));
+      card.appendChild(body);grid.appendChild(card);
+    });
+  }
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+/* ═══════════════════════ COOKING ═══════════════════════ */
+function renderCooking(){
+  if(!S.selectedRecipe){go('recipes');return h('div',{})}
+  if(S.cookDone)return renderCookingDone();
+  const r=S.selectedRecipe,steps=r.steps||[],total=steps.length;
+  const pct=total?Math.round(((S.cookStep+1)/total)*100):0;
+  const cur=steps[S.cookStep]||{};
+  const isWarn=S.timerSec!==null&&S.timerSec<60&&S.timerRunning;
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:640px;margin:0 auto'});
+
+  const hdr=h('div',{class:'cook-header'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('recipes')},'←'));
+  hdr.appendChild(h('span',{style:'font-size:40px'},r.emoji));
+  hdr.appendChild(h('div',{style:'flex:1'},h('div',{style:'font-size:24px;font-family:Georgia,serif'},r.name),h('div',{style:'font-size:13px;color:var(--muted)'},'Step '+(S.cookStep+1)+' of '+total)));
+  const rs=58,st=5,rad=(rs-st*2)/2,circ=2*Math.PI*rad,off=circ-(pct/100)*circ;
+  const ring=h('div',{class:'ring-wrap'},h('svg',{width:rs,height:rs,xmlns:'http://www.w3.org/2000/svg'}),h('span',{class:'ring-label'},pct+'%'));
+  ring.querySelector('svg').innerHTML=`<circle cx="${rs/2}" cy="${rs/2}" r="${rad}" fill="none" stroke="var(--border)" stroke-width="${st}"/><circle cx="${rs/2}" cy="${rs/2}" r="${rad}" fill="none" stroke="var(--primary)" stroke-width="${st}" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" stroke-linecap="round" style="transition:stroke-dashoffset .5s ease"/>`;
+  hdr.appendChild(ring);wrap.appendChild(hdr);
+
+  wrap.appendChild(h('div',{class:'progress-bar'},h('div',{class:'progress-fill',style:'width:'+pct+'%'})));
+
+  const dots=h('div',{class:'step-dots'});
+  steps.forEach((_,i)=>{
+    const done=S.cookCompleted.has(i),active=i===S.cookStep;
+    dots.appendChild(h('div',{class:'step-dot'+(done?' done':active?' active':''),onclick:()=>{cookResetTimer();S.cookStep=i;render()}},done?'✓':String(i+1)));
+  });
+  wrap.appendChild(dots);
+
+  if(S.timerSec!==null){
+    const tb=h('div',{class:'timer-box'+(isWarn?' warn':''),id:'timer-box'},
+      h('div',{style:'flex:1'},h('div',{class:'timer-label',id:'timer-label'},S.timerRunning?(isWarn?'⚠️ Almost time!':'⏱ Timer running'):'⏸ Paused'),h('div',{class:'timer-digits',id:'timer-digits'},formatTime(S.timerSec))),
+      h('div',{class:'timer-actions'},
+        h('button',{class:'timer-btn-main',onclick:()=>S.timerRunning?cookPauseTimer():cookResumeTimer()},S.timerRunning?'⏸':'▶'),
+        h('button',{class:'timer-btn-reset',onclick:cookResetTimer},'↺')
+      )
+    );
+    wrap.appendChild(tb);
+  }else{
+    wrap.appendChild(h('button',{class:'timer-start-btn',onclick:cookStartTimer},'⏱ Start '+(cur.duration||3)+'-min timer for this step'));
+  }
+
+  wrap.appendChild(h('div',{class:'step-card'+(!S.cookCompleted.has(S.cookStep)?' active':'')},
+    h('div',{class:'step-num-circle'+(S.cookCompleted.has(S.cookStep)?' done-circle':'')},S.cookCompleted.has(S.cookStep)?'✓':String(S.cookStep+1)),
+    h('p',{class:'step-text'},cur.text||'')
+  ));
+
+  if(r.tip&&S.cookStep===total-1){
+    wrap.appendChild(h('div',{class:'chef-tip'},'👨‍🍳 ',h('strong',{},"Chef's insight:"), ' '+r.tip));
+  }
+  wrap.appendChild(h('button',{class:'ing-toggle-btn',onclick:()=>{S.showIngRef=!S.showIngRef;render()}},'📋 '+(S.showIngRef?'Hide':'Show')+' ingredient reference'));
+  if(S.showIngRef)wrap.appendChild(h('div',{class:'ing-ref-box'},h('strong',{style:'color:var(--text);display:block;margin-bottom:4px'},'Your ingredients:'),S.ingredients.join(' · ')||'—'));
+
+  const nav=h('div',{class:'cook-nav'});
+  const back=h('button',{class:'btn btn-ghost',onclick:()=>{cookResetTimer();if(S.cookStep>0){S.cookStep--;render()}}});back.textContent='← Back';if(!S.cookStep)back.disabled=true;
+  nav.appendChild(back);
+  if(!S.cookCompleted.has(S.cookStep)){
+    nav.appendChild(h('button',{class:'btn btn-green',style:'flex:2;justify-content:center',onclick:()=>{S.cookCompleted.add(S.cookStep);toast('✓ Step done!','success');cookResetTimer();if(S.cookStep<total-1)S.cookStep++;render()}},'✓ Done — next step'));
+  }else if(S.cookStep<total-1){
+    nav.appendChild(h('button',{class:'btn btn-primary',style:'flex:2;justify-content:center',onclick:()=>{cookResetTimer();S.cookStep++;render()}},'Next Step →'));
+  }else{
+    nav.appendChild(h('button',{class:'btn btn-green',style:'flex:2;justify-content:center;background:var(--green)',onclick:()=>{S.cookDone=true;render();fireConfetti();addXP((r.steps?.length||5)*10+(r.difficulty==='Hard'?50:r.difficulty==='Medium'?25:10))}},"You did it! 🎉"));
+  }
+  wrap.appendChild(nav);
+  return wrap;
+}
+function renderCookingDone(){
+  const r=S.selectedRecipe,xp=(r.steps?.length||5)*10+(r.difficulty==='Hard'?50:r.difficulty==='Medium'?25:10);
+  const wrap=h('div',{class:'done-screen fade-up'});
+  wrap.appendChild(h('span',{class:'done-emoji'},'🎉'));
+  wrap.appendChild(h('h2',{style:'font-size:36px;margin-bottom:12px'},'You cooked it!'));
+  wrap.appendChild(h('p',{style:'color:var(--muted);font-size:18px;line-height:1.75;margin-bottom:14px'},'You just made ',h('strong',{},r.name),' from scratch.'));
+  wrap.appendChild(h('div',{class:'done-xp-box'},'🏅 ',h('strong',{},'+'+xp+' XP earned'),' — '+(r.difficulty||'Easy')+' dish completed'));
+  wrap.appendChild(h('p',{style:'color:var(--muted);font-size:16px;margin-bottom:32px'},'Upload a photo and the AI chef will give you honest, constructive feedback — plating, technique, and what to try next time.'));
+  const btns=h('div',{style:'display:flex;gap:12px;justify-content:center;flex-wrap:wrap'});
+  btns.appendChild(h('button',{class:'btn btn-primary',style:'font-size:16px;padding:14px 28px',onclick:()=>{S.feedbackPreview=null;S.feedback=null;S.feedbackShared=false;go('feedback')}},'📸 Get AI Feedback'));
+  btns.appendChild(h('button',{class:'btn btn-ghost',onclick:()=>go('community')},'See Community'));
+  btns.appendChild(h('button',{class:'btn btn-ghost',style:'background:var(--amber-light);border-color:var(--amber)',onclick:()=>{S.remixInput=r.name;S.remixMode='improve';go('remix')}},'🔀 Remix This Dish'));
+  wrap.appendChild(btns);
+  return wrap;
+}
+function cookStartTimer(){const dur=(S.selectedRecipe?.steps?.[S.cookStep]?.duration||3)*60;S.timerSec=dur;cookResumeTimer();toast('⏱ Timer: '+(dur/60|0)+' min')}
+function cookResumeTimer(){
+  if(S.timerInterval)clearInterval(S.timerInterval);S.timerRunning=true;
+  S.timerInterval=setInterval(()=>{
+    S.timerSec--;
+    if(S.timerSec<=0){clearInterval(S.timerInterval);S.timerInterval=null;S.timerRunning=false;S.timerSec=0;toast('⏰ Time\'s up — check your dish!','success');render();return}
+    const d=document.getElementById('timer-digits'),l=document.getElementById('timer-label'),b=document.getElementById('timer-box');
+    if(d)d.textContent=formatTime(S.timerSec);const w=S.timerSec<60;
+    if(l)l.textContent=w?'⚠️ Almost time!':'⏱ Timer running';
+    if(b)b.className='timer-box'+(w?' warn':'');
+  },1000);
+}
+function cookPauseTimer(){if(S.timerInterval){clearInterval(S.timerInterval);S.timerInterval=null}S.timerRunning=false;render()}
+function cookResetTimer(){if(S.timerInterval){clearInterval(S.timerInterval);S.timerInterval=null}S.timerRunning=false;S.timerSec=null}
+
+function setupChefChat(){
+  const old=document.getElementById('chef-chat-float');if(old)old.remove();
+  const float=h('div',{class:'chef-chat-float',id:'chef-chat-float'});
+  const panel=h('div',{class:'chef-chat-panel'+(S.chefChatOpen?' open':''),id:'chef-chat-panel'});
+  const head=h('div',{class:'chef-chat-head'},h('span',{class:'chef-chat-head-title'},'👨‍🍳 Chef Partner'),h('button',{class:'chef-chat-close',onclick:()=>{S.chefChatOpen=false;panel.classList.remove('open')}},'×'));
+  panel.appendChild(head);
+  const msgs=h('div',{class:'chat-msgs',id:'chat-msgs-wrap'});
+  S.chefMsgs.forEach(m=>msgs.appendChild(h('div',{class:'chat-bubble '+m.role},m.text)));
+  panel.appendChild(msgs);
+  const ir=h('div',{class:'chef-chat-input-row'});
+  const inp=h('input',{class:'chef-chat-input',type:'text',placeholder:'Ask your chef anything...',id:'chef-input',onkeydown:e=>{if(e.key==='Enter')sendChefMsg(inp,msgs)}});
+  ir.appendChild(inp);ir.appendChild(h('button',{class:'chef-chat-send',onclick:()=>sendChefMsg(inp,msgs)},'↑'));
+  panel.appendChild(ir);
+  const toggle=h('button',{class:'chef-chat-toggle',onclick:()=>{S.chefChatOpen=!S.chefChatOpen;panel.classList.toggle('open',S.chefChatOpen);toggle.textContent=S.chefChatOpen?'×':'👨‍🍳';if(S.chefChatOpen)msgs.scrollTop=msgs.scrollHeight}},S.chefChatOpen?'×':'👨‍🍳');
+  float.appendChild(panel);float.appendChild(toggle);document.body.appendChild(float);
+}
+async function sendChefMsg(inp,msgsWrap){
+  const q=inp.value.trim();if(!q)return;inp.value='';inp.disabled=true;
+  S.chefMsgs.push({role:'user',text:q});
+  msgsWrap.appendChild(h('div',{class:'chat-bubble user'},q));
+  const tb=h('div',{class:'chat-bubble ai typing'},'...');msgsWrap.appendChild(tb);msgsWrap.scrollTop=msgsWrap.scrollHeight;
+  const r=S.selectedRecipe,cur=r?.steps?.[S.cookStep]?.text||'';
+  try{const ans=await askChefAI(q,r?.name||'the dish',cur);tb.className='chat-bubble ai';tb.textContent=ans;S.chefMsgs.push({role:'ai',text:ans})}
+  catch{tb.textContent='My brain glitched — try again!'}
+  inp.disabled=false;inp.focus();msgsWrap.scrollTop=msgsWrap.scrollHeight;
+}
+
+/* ═══════════════════════ FEEDBACK ═══════════════════════ */
+function renderFeedback(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:620px;margin:0 auto'});
+  const hdr=h('div',{style:'display:flex;align-items:center;gap:12px;margin-bottom:6px'});
+  hdr.appendChild(h('button',{class:'back-btn',onclick:()=>go('cooking')},'←'));
+  hdr.appendChild(h('h2',{style:'font-size:32px'},'AI Chef Feedback'));
+  wrap.appendChild(hdr);
+  wrap.appendChild(h('p',{style:'color:var(--muted);margin-bottom:26px;padding-left:36px'},"Upload your finished dish. I'll score it honestly, highlight what worked, and give you one thing to make it even better next time."));
+
+  const uz=h('div',{class:'upload-zone'+(S.feedbackPreview?' has-image':''),id:'upload-zone',onclick:()=>{if(!S.feedbackPreview)document.getElementById('feedback-file').click()}});
+  const ff=h('input',{type:'file',accept:'image/*',style:'display:none',id:'feedback-file'});ff.onchange=e=>handleFeedbackFile(e.target.files[0]);
+  if(S.feedbackLoading){uz.appendChild(h('div',{class:'spinner-wrap'},h('div',{class:'spinner'}),h('p',{class:'spinner-msg'},'Looking at your dish carefully...')));
+  }else if(S.feedbackPreview){uz.appendChild(h('img',{src:S.feedbackPreview,style:'width:100%;max-height:320px;object-fit:cover;display:block'}));
+  }else{uz.appendChild(h('div',{},h('div',{style:'font-size:52px;margin-bottom:14px'},'🍽️'),h('div',{style:'font-weight:500;font-size:16px;margin-bottom:6px'},'Upload your finished dish'),h('div',{style:'font-size:13px;color:var(--muted)'},'Let the AI chef evaluate it')));}
+  uz.appendChild(ff);wrap.appendChild(uz);
+
+  if(S.feedback&&!S.feedbackLoading){
+    const fb=S.feedback;
+    const card=h('div',{class:'card fb-card pop'});
+    const fh=h('div',{class:'fb-header'},
+      h('div',{},h('div',{class:'fb-header-title'},'Your Feedback'),fb.badge?h('div',{style:'color:rgba(255,255,255,.7);font-size:12px;margin-top:2px'},'🏅 Badge unlocked: '+fb.badge):null),
+      h('div',{class:'fb-score-circle'},h('div',{class:'fb-score-n'},String(fb.score||8)),h('div',{class:'fb-score-d'},'/ 10'))
+    );
+    card.appendChild(fh);
+    const fb2=h('div',{class:'fb-body'});
+    const rows=[['📋 Presentation',fb.presentation],['✨ What worked',fb.highlight],['💡 Next level tip',fb.nextLevel||fb.tip]];
+    rows.forEach(([l,t],i)=>{const row=h('div',{class:'fb-row'});if(i===rows.length-1)row.style.borderBottom='none';row.appendChild(h('div',{class:'fb-row-label'},l));row.appendChild(h('div',{class:'fb-row-text'},t||'—'));fb2.appendChild(row)});
+    card.appendChild(fb2);wrap.appendChild(card);
+    const acts=h('div',{style:'display:flex;gap:10px'});
+    acts.appendChild(h('button',{class:'btn '+(S.feedbackShared?'btn-green':'btn-primary'),disabled:S.feedbackShared,onclick:shareToComm,style:'flex:1;justify-content:center'},S.feedbackShared?'✓ Shared!':'👥 Share to Community'));
+    acts.appendChild(h('button',{class:'btn btn-ghost',style:'flex:1;justify-content:center;background:var(--amber-light);border-color:var(--amber)',onclick:()=>{S.remixInput=S.selectedRecipe?.name||'';S.remixMode='improve';go('remix')}},'🔀 Remix This Dish'));
+    wrap.appendChild(acts);
+  }
+  return wrap;
+}
+async function handleFeedbackFile(file){
+  if(!file)return;S.feedbackPreview=URL.createObjectURL(file);S.feedbackLoading=true;S.feedback=null;render();
+  try{const{base64,mediaType}=await fileToBase64(file);S.feedback=await getDishFeedback(base64,mediaType,S.selectedRecipe?.name||'my dish');toast('📊 Feedback ready!','success')}
+  catch{S.feedback={score:8,presentation:'Clean plating with good colour separation.',highlight:'The texture contrast looks really promising — nicely executed.',tip:'A fresh herb garnish would bring colour contrast and brightness.',nextLevel:'Try plating with height next time — even a small mound makes it look intentional.',badge:'Kitchen Explorer'};toast('Using sample feedback — add API key for real AI analysis','')}
+  S.feedbackLoading=false;render();
+}
+function shareToComm(){
+  S.communityPosts.unshift({id:Date.now(),user:'You',initials:'ME',avatarBg:'var(--primary)',
+    dish:S.selectedRecipe?.name||'My Dish',emoji:S.selectedRecipe?.emoji||'🍽️',
+    story:'Made this using CookLens! '+(S.selectedVibe?S.selectedVibe.name+' vibe. ':'')+(S.selectedStyle?S.selectedStyle.name+' style.':''),
+    diet:S.dietPrefs[0]||'',aiScore:S.feedback?.score||8,
+    aiHighlight:S.feedback?.highlight||'',aiTip:S.feedback?.tip||'',
+    likes:0,comments:0,cardBg:'var(--primary-light)',accent:'var(--primary)',badge:S.feedback?.badge||'Cook'});
+  S.feedbackShared=true;toast('🎉 Shared to community!','success');render();setTimeout(()=>go('community'),900);
+}
+
+/* ═══════════════════════ COMMUNITY ═══════════════════════ */
+function renderCommunity(){
+  const wrap=h('div',{class:'page-section fade-up',style:'max-width:760px;margin:0 auto'});
+  const top=h('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px'});
+  top.appendChild(h('div',{},h('h2',{style:'font-size:32px;margin-bottom:4px'},'Community Kitchen'),h('p',{style:'color:var(--muted)'},'Real dishes, real AI feedback, real people improvising')));
+  top.appendChild(h('button',{class:'btn btn-primary',style:'font-size:13px;padding:9px 18px;border-radius:20px',onclick:()=>go('home')},'+ Cook Something'));
+  wrap.appendChild(top);
+  const ctrl=h('div',{class:'comm-controls'});
+  const diets=['All',...new Set(S.communityPosts.map(p=>p.diet).filter(Boolean))];
+  diets.forEach(d=>ctrl.appendChild(h('button',{class:'comm-filter-btn'+(S.commFilter===d?' on':''),onclick:()=>{S.commFilter=d;render()}},d)));
+  const sw=h('div',{style:'margin-left:auto;display:flex;gap:6px'});
+  [['recent','📅 Recent'],['score','⭐ Score'],['likes','♥ Likes']].forEach(([v,l])=>sw.appendChild(h('button',{class:'sort-btn'+(S.commSort===v?' on':''),onclick:()=>{S.commSort=v;render()}},l)));
+  ctrl.appendChild(sw);wrap.appendChild(ctrl);
+  let posts=S.commFilter==='All'?[...S.communityPosts]:S.communityPosts.filter(p=>p.diet===S.commFilter);
+  if(S.commSort==='score')posts.sort((a,b)=>b.aiScore-a.aiScore);
+  else if(S.commSort==='likes')posts.sort((a,b)=>(b.likes+(S.liked.has(b.id)?1:0))-(a.likes+(S.liked.has(a.id)?1:0)));
+  const pw=h('div',{class:'comm-posts'});
+  posts.forEach((post,i)=>{
+    const card=h('div',{class:'card post-card fade-up',style:'animation-delay:'+(i*.07)+'s'});
+    const banner=h('div',{class:'post-banner',style:'background:'+post.cardBg});
+    banner.appendChild(h('span',{class:'post-emoji'},post.emoji));
+    const pi=h('div',{style:'flex:1'});
+    if(post.badge)pi.appendChild(h('div',{style:'font-size:11px;display:inline-block;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:10px;margin-bottom:5px'},'🏅 '+post.badge));
+    pi.appendChild(h('div',{style:'font-size:20px;font-family:Georgia,serif;margin-bottom:4px'},post.dish));
+    pi.appendChild(h('div',{style:'font-size:13.5px;color:var(--muted)'},post.story));
+    banner.appendChild(pi);card.appendChild(banner);
+    const body=h('div',{class:'post-body'});
+    const ur=h('div',{class:'post-user-row'});
+    ur.appendChild(h('div',{class:'post-avatar',style:'background:'+post.avatarBg},post.initials));
+    ur.appendChild(h('span',{class:'post-username'},post.user));
+    if(post.diet)ur.appendChild(h('span',{class:'post-diet'},post.diet));
+    ur.appendChild(h('div',{class:'post-score',style:'background:'+post.cardBg+';color:'+post.accent},'⭐ '+post.aiScore+'/10'));
+    body.appendChild(ur);
+    if(post.aiHighlight||post.aiTip){
+      const ab=h('div',{class:'post-ai-block',style:'border-color:'+post.accent});
+      ab.appendChild(h('div',{class:'post-ai-label'},'AI Feedback'));
+      if(post.aiHighlight)ab.appendChild(h('div',{style:'font-size:13.5px;line-height:1.65;margin-bottom:3px'},'✨ '+post.aiHighlight));
+      if(post.aiTip)ab.appendChild(h('div',{style:'font-size:13.5px;line-height:1.65;color:var(--muted)'},'💡 '+post.aiTip));
+      body.appendChild(ab);
+    }
+    const acts=h('div',{class:'post-actions'});
+    const liked=S.liked.has(post.id);
+    acts.appendChild(h('button',{class:'like-btn'+(liked?' liked':''),onclick:()=>{liked?S.liked.delete(post.id):S.liked.add(post.id);render()}},'♥ '+(post.likes+(liked?1:0))));
+    acts.appendChild(h('div',{style:'font-size:13px;color:var(--muted);padding:5px 9px'},'💬 '+post.comments));
+    // Copy Recipe button — only shown if post has a recipe attached
+    if(post.recipe){
+      acts.appendChild(h('button',{
+        style:'display:flex;align-items:center;gap:5px;border:1.5px solid var(--primary);padding:5px 13px;border-radius:20px;font-size:13px;background:var(--primary-light);color:var(--primary);cursor:pointer;font-weight:600;transition:all .15s',
+        onmouseenter:e=>{e.currentTarget.style.background='var(--primary)';e.currentTarget.style.color='#fff'},
+        onmouseleave:e=>{e.currentTarget.style.background='var(--primary-light)';e.currentTarget.style.color='var(--primary)'},
+        onclick:()=>{
+          S.selectedRecipe=post.recipe;
+          S.cookStep=0;S.cookCompleted=new Set();S.cookDone=false;
+          S.timerSec=null;S.timerRunning=false;
+          S.chefMsgs=[{role:'ai',text:"You're cooking "+post.user+"'s "+post.dish+"! I'll guide you step-by-step. Ask me anything as we go."}];
+          toast('Loading '+post.dish+'...','success');
+          go('cooking');
+        }
+      },'👨‍🍳 Cook This →'));
+    }
+    body.appendChild(acts);card.appendChild(body);pw.appendChild(card);
+  });
+  if(!posts.length)pw.appendChild(h('div',{style:'text-align:center;padding:60px 0;color:var(--muted)'},h('div',{style:'font-size:40px;margin-bottom:12px'},'🍽️'),h('p',{},'No posts in this category yet.')));
+  wrap.appendChild(pw);return wrap;
+}
+
+/* ═══════════════════════ INIT ═══════════════════════ */
+go('home');
+</script>
+</body>
+</html>
